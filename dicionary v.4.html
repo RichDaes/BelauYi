@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>中译帕词典</title>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: antiquewhite;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .top {
+      width: 100%;
+      padding: 30px;
+      background-color: rgb(225, 216, 163);
+      text-align: center;
+    }
+    .top a {
+      position: relative;
+      top: 10px;
+      font-size: 25px;
+      color: rgb(19, 0, 102);
+      text-decoration: none;
+    }
+    .main {
+      display: flex;
+      width: 100%;
+      margin: 15px 0;
+    }
+    .advertisement {
+      width: 30%;
+      border-right: 1px solid gray;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .advertisement img {
+      width: 160px;
+      height: 100px;
+    }
+    .search {
+      width: 70%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-grow: 1;
+    }
+    .search form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .searchSubmit {
+      display: flex;
+      margin-bottom: 20px;
+      transform: scale(1.5);
+    }
+    .searchSubmit input[type="search"] {
+      width: 300px;
+      padding: 5px;
+      border: 1px solid #2F5DF2;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    .searchSubmit input[type="submit"] {
+      padding: 5px 15px;
+      background-color: #2F5DF2;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-left: -55px;
+    }
+    .searchSubmit input[type="submit"]:hover {
+      background-color: #1E3D8B;
+    }
+    .language {
+      margin-top: 10px;
+    }
+    .language img {
+      width: 5px;
+      height: 10px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+      text-align: left;
+    }
+    ul { list-style: none; padding-left: 0; }
+    li { margin-bottom: 5px; cursor: pointer; }
+    li:hover { background-color: #f0f0f0; }
+    .footer {
+      background-color: gray;
+      width:100%;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .footer img {
+      width: 40px;
+      height: 40px;
+    }
+  </style>
+  <!-- 引入 Fuse.js -->
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+</head>
+<body>
+  <div class="top">
+    <a class="title">中文翻译帕劳语词典&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Chinese --> Palauan Dictionary</a>
+  </div>
+  <div class="main">
+    <div class="advertisement">
+      <img src="images/Flag-Palau.webp" alt="Palau Flag">
+    </div>
+    <div class="search">
+      <form id="dictForm">
+        <div class="searchSubmit">
+          <input type="search" id="input-word" placeholder="输入中文词汇">
+          <input type="submit" id="search-btn" value="翻译">
+        </div>
+        <div class="language">
+          <label for="language">语言</label>
+          <select id="language">
+            <option>请选择</option>
+            <option value="cn-to-pw">🇨🇳 -> 🇵🇼</option>
+            <option value="pw-to-cn">🇵🇼 -> 🇨🇳</option>
+          </select>
+        </div>
+      </form>
+      <div id="result"></div>
+    </div>
+  </div>
+  <div class="footer">
+    <img src="images/footer-icon.png" alt="Footer Icon">
+  </div>
+  <script>
+    // 完整词典数据（共 30 个词条），所有注音（重音符号）均已去除
+    const dictionary = {
+      "a": {
+        "translation": "(无固定含义)",
+        "type": "助词",
+        "definition": "用在名词或动词前，具有语法功能",
+        "example": "**a kmu ng ngar er ngii a udu-dek, e ak mecherar a beches el mlai.** If I had money, (then) I'd buy a new car. 如果我有钱，（那么）我就会买一辆新车。"
+      },
+      "abai": {
+        "translation": "见 bai",
+        "type": "名词",
+        "definition": "参考 bai 词条",
+        "example": ""
+      },
+      "-ad": {
+        "translation": "我们的（包括你）",
+        "type": "物主后缀",
+        "definition": "第一人称复数（包括听话人）的物主后缀",
+        "example": ""
+      },
+      "adang": {
+        "translation": "请；是不是；当然",
+        "type": "感叹词",
+        "definition": "用于请求、确认或强调",
+        "example": "**A Droteo a mle er a elii, adang diak?** Droteo arrived yesterday, didn't he? Droteo昨天到了，对吧？"
+      },
+      "Adebetei": {
+        "translation": "Ngeriab 的传奇男性居民",
+        "type": "名词",
+        "definition": "传说中的男性人物，居住在 Ngeriab",
+        "example": ""
+      },
+      "adios": {
+        "translation": "再见",
+        "type": "感叹词",
+        "definition": "用于告别",
+        "example": ""
+      },
+      "aikang": {
+        "translation": "这些",
+        "type": "指示代词",
+        "definition": "指代靠近说话人的多个物品或动物",
+        "example": "**aikang el hong** these books. 这些书。"
+      },
+      "aikel": {
+        "translation": "那些",
+        "type": "指示代词",
+        "definition": "指代远离说话人和听话人的多个物品或动物",
+        "example": "**aikel kahol** those boxes over there. 那些箱子（在那边）。"
+      },
+      "ailechang": {
+        "translation": "那些",
+        "type": "指示代词",
+        "definition": "指代靠近听话人但远离说话人的多个物品或动物",
+        "example": "**ailechang el kialo** those things (near you). 那些东西（在你附近）。"
+      },
+      "ailel": {
+        "translation": "这些",
+        "type": "指示代词",
+        "definition": "指代靠近说话人但远离听话人的多个物品或动物",
+        "example": "**ailel hong** these books (near me). 这些书（在我附近）。"
+      },
+      "ak": {
+        "translation": "我",
+        "type": "代词",
+        "definition": "第一人称单数非强调形式",
+        "example": ""
+      },
+      "-ak": {
+        "translation": "我的",
+        "type": "物主后缀",
+        "definition": "第一人称单数的物主后缀",
+        "example": ""
+      },
+      "-ak2": {
+        "translation": "我（宾格）",
+        "type": "代词",
+        "definition": "第一人称单数宾格代词",
+        "example": ""
+      },
+      "aki": {
+        "translation": "我们（不包括你）",
+        "type": "代词",
+        "definition": "第一人称复数（不包括听话人）的代词",
+        "example": ""
+      },
+      "-al": {
+        "translation": "他的/她的/它的/他们的",
+        "type": "物主后缀",
+        "definition": "第三人称单数或复数的物主后缀",
+        "example": ""
+      },
+      "a kmu": {
+        "translation": "如果",
+        "type": "连词",
+        "definition": "用于引导条件从句",
+        "example": "**A kmu ng ngar er ngii a udu-dek, e ak mecherar a beches el mlai.** If I had money, (then) I'd buy a new car. 如果我有钱，（那么）我就会买一辆新车。"
+      },
+      "a ldu": {
+        "translation": "因为",
+        "type": "连词",
+        "definition": "表示因果关系",
+        "example": "**A ldu ng cheitir a kbo er sei.** Because they don't want me to go over there. 因为他们不想让我去那里。"
+      },
+      "a lechub": {
+        "translation": "如果；要是",
+        "type": "连词",
+        "definition": "用于表示假设或条件",
+        "example": "**A lechub me...** If only. 如果只是这样..."
+      },
+      "aleko": {
+        "translation": "我打算…",
+        "type": "表达意图的短语",
+        "definition": "用于表示说话人正打算做某事",
+        "example": "**aleko (ak)** I intended to...（我本打算……）"
+      },
+      "alii": {
+        "translation": "看！",
+        "type": "感叹词",
+        "definition": "用于引起注意",
+        "example": "**Alii!** Hey! Look out! 嘿！小心！"
+      },
+      "a lsekum": {
+        "translation": "如果",
+        "type": "连词",
+        "definition": "表示条件关系；alsagum 的另一种拼写",
+        "example": "**A lsekum ng ungil a chei, e te mo er a chei.** If the tide is good, (then) they'll go fishing. 如果潮汐好的话，他们就会去钓鱼。"
+      },
+      "altae": {
+        "translation": "可能",
+        "type": "副词",
+        "definition": "表示‘或许’、‘可能’",
+        "example": "**altae** if (perhaps/maybe). 或许/可能。"
+      },
+      "altang": {
+        "translation": "如果（或许/可能）",
+        "type": "连词/副词",
+        "definition": "与 altae 同义，表示假设或不确定（perhaps/maybe）",
+        "example": "altang (syn. altae)."
+      },
+      "-ang": {
+        "translation": "他/她/它（宾格）",
+        "type": "代词",
+        "definition": "第三人称单数宾格代词 (him; her; it)",
+        "example": ""
+      },
+      "-am1": {
+        "translation": "你的（单数）",
+        "type": "物主后缀",
+        "definition": "第二人称单数所有格后缀 (your)",
+        "example": ""
+      },
+      "-am2": {
+        "translation": "我们的（不包括你）",
+        "type": "物主后缀",
+        "definition": "第一人称复数排他所有格后缀 (our, excluding you)",
+        "example": ""
+      },
+      "-ar": {
+        "translation": "他/她/它（宾格）",
+        "type": "代词",
+        "definition": "第三人称单数宾格代词 (him; her; it)",
+        "example": ""
+      },
+      "-au": {
+        "translation": "你（宾格）",
+        "type": "代词",
+        "definition": "第二人称单数宾格代词 (you)",
+        "example": ""
+      },
+      "a uche er a (...e...)": {
+        "translation": "在...之前",
+        "type": "连词",
+        "definition": "用于表示某个事件发生在另一事件之前",
+        "example": "**A uche er a kbo kmerek er a subelek, e a Droteo a mirael el mo er a bil.** Before I finished my homework, Droteo went home. 在我完成作业之前，Droteo就回家了。"
+      },
+      "a uruil er a (...e...)": {
+        "translation": "在...之后",
+        "type": "连词",
+        "definition": "用于表示某个事件发生在另一事件之后",
+        "example": "**A uruil er a louero er a sers a Toki, e ng tilletib a chimal.** After Toki worked in the garden, she washed her hands. Toki在花园里干完活后，她洗了手。"
+      }
+    };
+
+  // 标准化函数：去掉括号及括号内内容，用于中文查询时匹配“我”和“我（宾格）”等
+  function normalize(str) {
+    return str.replace(/（.*?）/g, '').trim();
+  }
+
+  // 将词典转换为数组形式，以便 Fuse.js 模糊搜索
+  const dictionaryArray = Object.entries(dictionary).map(([word, data]) => ({
+    word,
+    ...data
+  }));
+
+  // 配置 Fuse.js...
+  const fuse = new Fuse(dictionaryArray, {
+    keys: ['word', 'translation'],
+    threshold: 0.4
+  });
+
+    // 监听表单提交事件
+    document.getElementById('dictForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const inputWord = document.getElementById('input-word').value.trim();
+      const languageDirection = document.getElementById('language').value;
+      const resultDiv = document.getElementById('result');
+
+      if (!inputWord) {
+        resultDiv.innerHTML = "请输入要翻译的词汇！";
+        return;
+      }
+      if (languageDirection === "请选择") {
+        resultDiv.innerHTML = "请选择语言方向！";
+        return;
+      }
+
+      let resultList = [];
+
+      if (languageDirection === "pw-to-cn") {
+        // 帕劳语 -> 中文：先精确匹配，再模糊搜索
+        const exact = dictionaryArray.filter(item => item.word === inputWord);
+        if (exact.length > 0) {
+          resultList = exact;
+        } else {
+          const fuzzyResults = fuse.search(inputWord);
+          if (fuzzyResults.length === 1) {
+            resultList = [fuzzyResults[0].item];
+          } else if (fuzzyResults.length > 1) {
+            let suggestionHtml = "未找到精确匹配，你是否要搜索以下词语：<ul>";
+            fuzzyResults.forEach(res => {
+              suggestionHtml += `<li onclick="document.getElementById('input-word').value='${res.item.word}'; document.getElementById('dictForm').dispatchEvent(new Event('submit'));">${res.item.word} (${res.item.translation})</li>`;
+            });
+            suggestionHtml += "</ul>";
+            resultDiv.innerHTML = suggestionHtml;
+            return;
+          }
+        }
+      } else {
+        // 中文 -> 帕劳语：使用 normalize() 比较翻译字段，但展示时保留原始文本
+        const found = dictionaryArray.filter(item => normalize(item.translation) === normalize(inputWord));
+        if (found.length > 0) {
+          resultList = found;
+        } else {
+          const fuseCn = new Fuse(dictionaryArray, {
+            keys: ['translation'],
+            threshold: 0.4
+          });
+          const fuzzyResults = fuseCn.search(inputWord);
+          if (fuzzyResults.length === 1) {
+            resultList = [fuzzyResults[0].item];
+          } else if (fuzzyResults.length > 1) {
+            let suggestionHtml = "未找到精确匹配，你是否要搜索以下词语：<ul>";
+            fuzzyResults.forEach(res => {
+              suggestionHtml += `<li onclick="document.getElementById('input-word').value='${res.item.translation}'; document.getElementById('dictForm').dispatchEvent(new Event('submit'));">${res.item.translation} (${res.item.word})</li>`;
+            });
+            suggestionHtml += "</ul>";
+            resultDiv.innerHTML = suggestionHtml;
+            return;
+          }
+        }
+      }
+
+      // 渲染结果：显示帕劳语词条（加粗）、中文释义、词性、释义和示例
+      if (resultList.length === 0) {
+        resultDiv.innerHTML = "未找到翻译结果";
+      } else {
+        let output = "";
+        resultList.forEach(item => {
+          output += `
+            <div style="margin:10px 0;">
+              <span style="color: rgb(19, 0, 102); font-size: 20px;"><b>${item.word}</b></span><br>
+              <b>中文释义：</b> ${item.translation}<br>
+              <b>词性：</b> ${item.type || "无"}<br>
+              <b>释义：</b> ${item.definition || "暂无释义"}<br>
+              <b>示例：</b> ${item.example || "暂无示例"}
+            </div>
+          `;
+        });
+        resultDiv.innerHTML = output;
+      }
+    });
+  </script>
+</body>
+</html>
