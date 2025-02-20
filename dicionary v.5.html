@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>中译帕词典</title>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: antiquewhite;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .top {
+      width: 100%;
+      padding: 30px;
+      background-color: rgb(225, 216, 163);
+      text-align: center;
+    }
+    .top a {
+      position: relative;
+      top: 10px;
+      font-size: 25px;
+      color: rgb(19, 0, 102);
+      text-decoration: none;
+    }
+    .main {
+      display: flex;
+      width: 100%;
+      margin: 15px 0;
+    }
+    .advertisement {
+      width: 30%;
+      border-right: 1px solid gray;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .advertisement img {
+      width: 160px;
+      height: 100px;
+    }
+    .search {
+      width: 70%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-grow: 1;
+    }
+    .search form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .searchSubmit {
+      display: flex;
+      margin-bottom: 20px;
+      transform: scale(1.5);
+    }
+    .searchSubmit input[type="search"] {
+      width: 300px;
+      padding: 5px;
+      border: 1px solid #2F5DF2;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    .searchSubmit input[type="submit"] {
+      padding: 5px 15px;
+      background-color: #2F5DF2;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-left: -55px;
+    }
+    .searchSubmit input[type="submit"]:hover {
+      background-color: #1E3D8B;
+    }
+    .language {
+      margin-top: 10px;
+    }
+    .language img {
+      width: 5px;
+      height: 10px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+      text-align: left;
+    }
+
+    ul {
+      list-style: none;
+       padding-left: 0;
+       }
+
+    li { 
+      margin-bottom: 5px;
+       cursor: pointer;
+       }
+
+    li:hover { 
+      background-color: #f0f0f0;
+     }
+
+    .footer {
+      background-color: gray;
+      width:100%;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .footer img {
+      width: 40px;
+      height: 40px;
+    }
+  </style>
+  <!-- 引入 Fuse.js -->
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+</head>
+<body>
+  <div class="top">
+    <a class="title">中文翻译帕劳语词典&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Chinese --> Palauan Dictionary</a>
+  </div>
+  <div class="main">
+    <div class="advertisement">
+      <img src="images/Flag-Palau.webp" alt="Palau Flag">
+    </div>
+    <div class="search">
+      <form id="dictForm">
+        <div class="searchSubmit">
+          <input type="search" id="input-word" placeholder="输入中文词汇">
+          <input type="submit" id="search-btn" value="翻译">
+        </div>
+        <div class="language">
+          <label for="language">语言</label>
+          <select id="language">
+            <option>请选择</option>
+            <option value="cn-to-pw">🇨🇳 -> 🇵🇼</option>
+            <option value="pw-to-cn">🇵🇼 -> 🇨🇳</option>
+          </select>
+        </div>
+      </form>
+      <div id="result"></div>
+    </div>
+  </div>
+  <div class="footer">
+    <img src="images/footer-icon.png" alt="Footer Icon">
+  </div>
+  <script>
+    // 完整词典数据（共 30 个词条），所有注音（重音符号）均已去除
+    const dictionary = [
+      {
+      "word": "a",
+      "translation": "(无固定含义)",
+      "type": "助词",
+      "definition": "用在名词或动词前，具有语法功能",
+      "example": "**a kmu ng ngar er ngii a udu-dek, e ak mecherar a beches el mlai.** If I had money, (then) I'd buy a new car. 如果我有钱，（那么）我就会买一辆新车。"
+    },
+    {
+      "word": "abai",
+      "translation": "见 bai",
+      "type": "名词",
+      "definition": "参考 bai 词条",
+      "example": ""
+    },
+    {
+      "word": "-ad",
+      "translation": "我们的（包括你）",
+      "type": "物主后缀",
+      "definition": "第一人称复数（包括听话人）的物主后缀",
+      "example": ""
+    },
+    {
+      "word": "adang",
+      "translation": "请；是不是；当然",
+      "type": "感叹词",
+      "definition": "用于请求、确认或强调",
+      "example": "**A Droteo a mle er a elii, adang diak?** Droteo arrived yesterday, didn't he? Droteo昨天到了，对吧？"
+    },
+    {
+      "word": "Adebetei",
+      "translation": "Ngeriab 的传奇男性居民",
+      "type": "名词",
+      "definition": "传说中的男性人物，居住在 Ngeriab",
+      "example": ""
+    },
+    {
+      "word": "adios",
+      "translation": "再见",
+      "type": "感叹词",
+      "definition": "用于告别",
+      "example": ""
+    },
+    {
+      "word": "aikang",
+      "translation": "这些",
+      "type": "指示代词",
+      "definition": "指代靠近说话人的多个物品或动物",
+      "example": "**aikang el hong** these books. 这些书。"
+    },
+    {
+      "word": "aikel",
+      "translation": "那些",
+      "type": "指示代词",
+      "definition": "指代远离说话人和听话人的多个物品或动物",
+      "example": "**aikel kahol** those boxes over there. 那些箱子（在那边）。"
+    },
+    {
+      "word": "ailechang",
+      "translation": "那些",
+      "type": "指示代词",
+      "definition": "指代靠近听话人但远离说话人的多个物品或动物",
+      "example": "**ailechang el kialo** those things (near you). 那些东西（在你附近）。"
+    },
+    {
+      "word": "ailel",
+      "translation": "这些",
+      "type": "指示代词",
+      "definition": "指代靠近说话人但远离听话人的多个物品或动物",
+      "example": "**ailel hong** these books (near me). 这些书（在我附近）。"
+    },
+    {
+      "word": "ak",
+      "translation": "我",
+      "type": "代词",
+      "definition": "第一人称单数非强调形式",
+      "example": ""
+    },
+    {
+      "word": "-ak",
+      "translation": "我的",
+      "type": "物主后缀",
+      "definition": "第一人称单数的物主后缀",
+      "example": ""
+    },
+    {
+      "word": "-ak2",
+      "translation": "我（宾格）",
+      "type": "代词",
+      "definition": "第一人称单数宾格代词",
+      "example": ""
+    },
+    {
+      "word": "aki",
+      "translation": "我们（不包括你）",
+      "type": "代词",
+      "definition": "第一人称复数（不包括听话人）的代词",
+      "example": ""
+    },
+    {
+      "word": "-al",
+      "translation": "他的/她的/它的/他们的",
+      "type": "物主后缀",
+      "definition": "第三人称单数或复数的物主后缀",
+      "example": ""
+    },
+    {
+      "word": "a kmu",
+      "translation": "如果",
+      "type": "连词",
+      "definition": "用于引导条件从句",
+      "example": "**A kmu ng ngar er ngii a udu-dek, e ak mecherar a beches el mlai.** If I had money, (then) I'd buy a new car. 如果我有钱，（那么）我就会买一辆新车。"
+    },
+    {
+      "word": "a ldu",
+      "translation": "因为",
+      "type": "连词",
+      "definition": "表示因果关系",
+      "example": "**A ldu ng cheitir a kbo er sei.** Because they don't want me to go over there. 因为他们不想让我去那里。"
+    },
+    {
+      "word": "a lechub",
+      "translation": "如果；要是",
+      "type": "连词",
+      "definition": "用于表示假设或条件",
+      "example": "**A lechub me...** If only. 如果只是这样..."
+    },
+    {
+      "word": "aleko",
+      "translation": "我打算…",
+      "type": "表达意图的短语",
+      "definition": "用于表示说话人正打算做某事",
+      "example": "**aleko (ak)** I intended to...（我本打算……）"
+    },
+    {
+      "word": "alii",
+      "translation": "看！",
+      "type": "感叹词",
+      "definition": "用于引起注意",
+      "example": "**Alii!** Hey! Look out! 嘿！小心！"
+    },
+    {
+      "word": "a lsekum",
+      "translation": "如果",
+      "type": "连词",
+      "definition": "表示条件关系；alsagum 的另一种拼写",
+      "example": "**A lsekum ng ungil a chei, e te mo er a chei.** If the tide is good, (then) they'll go fishing. 如果潮汐好的话，他们就会去钓鱼。"
+    },
+    {
+      "word": "altae",
+      "translation": "可能",
+      "type": "副词",
+      "definition": "表示‘或许’、‘可能’",
+      "example": "**altae** if (perhaps/maybe). 或许/可能。"
+    },
+    {
+      "word": "altang",
+      "translation": "如果（或许/可能）",
+      "type": "连词/副词",
+      "definition": "与 altae 同义，表示假设或不确定（perhaps/maybe）",
+      "example": "altang (syn. altae)."
+    },
+    {
+      "word": "-ang",
+      "translation": "他/她/它（宾格）",
+      "type": "代词",
+      "definition": "第三人称单数宾格代词 (him; her; it)",
+      "example": ""
+    },
+    {
+      "word": "-am1",
+      "translation": "你的（单数）",
+      "type": "物主后缀",
+      "definition": "第二人称单数所有格后缀 (your)",
+      "example": ""
+    },
+    {
+      "word": "-am2",
+      "translation": "我们的（不包括你）",
+      "type": "物主后缀",
+      "definition": "第一人称复数排他所有格后缀 (our, excluding you)",
+      "example": ""
+    },
+    {
+      "word": "-ar",
+      "translation": "他/她/它（宾格）",
+      "type": "代词",
+      "definition": "第三人称单数宾格代词 (him; her; it)",
+      "example": ""
+    },
+    {
+      "word": "-au",
+      "translation": "你（宾格）",
+      "type": "代词",
+      "definition": "第二人称单数宾格代词 (you)",
+      "example": ""
+    },
+    {
+      "word": "a uche er a (...e...)",
+      "translation": "在...之前",
+      "type": "连词",
+      "definition": "用于表示某个事件发生在另一事件之前",
+      "example": "**A uche er a kbo kmerek er a subelek, e a Droteo a mirael el mo er a bil.** Before I finished my homework, Droteo went home. 在我完成作业之前，Droteo就回家了。"
+    },
+    {
+      "word": "a uruil er a (...e...)",
+      "translation": "在...之后",
+      "type": "连词",
+      "definition": "用于表示某个事件发生在另一事件之后",
+      "example": "**A uruil er a louero er a sers a Toki, e ng tilletib a chimal.** After Toki worked in the garden, she washed her hands. Toki在花园里干完活后，她洗了手。"
+    },
+      //B....
+    {
+      "word": "bab (MOD.)",
+      "translation": "先做；首先进行",
+      "type": "副词 / 短语",
+      "definition": "用在做其他事情之前，表示“先…”或“首先…”的语气。",
+      "examples": [
+        "Bab a mo er a ngerang?（先做什么？）",
+        "Bab mod. do first.（原文简述）"
+      ]
+    },
+    {
+      "word": "bab (n.)",
+      "translation": "上方；顶部；表面",
+      "type": "名词",
+      "definition": "指物体的上方或表面区域，也可泛指更高的位置或等级。",
+      "examples": [
+        "bebúl (bebül): space above me.（在我上方的空间）",
+        "bebel a tebel: top of the table.（桌子的顶端）",
+        "A Tony a ngar er a bab.（Tony 住在楼上 / Tony 地位更高）",
+        "A Droteo a kie er a bab.（Droteo 也在上面 / Droteo 也级别更高）",
+        "A klob a ngar er a bebuk.（那个码头在更高处 / The dock is up there）"
+      ]
+    },
+    {
+      "word": "Babeldaob (bab el daob)",
+      "translation": "Babeldaob 岛 / 天堂（基督教语境）",
+      "type": "名词",
+      "definition": "帕劳最大的岛屿（字面含义为“上方之海”），在某些基督教语境中也指“天国”或“高处”，引申出“高高在上”等含义。",
+      "examples": [
+        "A Tony a ngar er a bab.（Tony 住在上面 / Tony 地位更高）",
+        "A Droteo a kie er a bab.（Droteo 住在上面 / Droteo 地位更高）"
+      ]
+    },
+    {
+      "word": "babeluades",
+      "translation": "天堂（基督教意义）",
+      "type": "名词",
+      "definition": "在基督教语境中指“天国”或“天堂”，参见 bab, uades。",
+      "examples": [
+        "See bab, uades.（原文提示：参考 bab, uades。）"
+      ]
+    },
+    {
+      "word": "babelúu",
+      "translation": "一种树",
+      "type": "名词",
+      "definition": "指某种树的名称，具体种类待确认。",
+      "examples": []
+    },
+    {
+      "word": "babier / babei",
+      "translation": "纸；纸制品",
+      "type": "名词",
+      "definition": "指纸张或纸制物品（可能来源于德语 Papier）。",
+      "examples": [
+        "A babier er ngii a mo er a sensei.（那张纸在老师那里）",
+        "Bablingl k N poss.（原文中可能为派生形，需结合上下文解释）"
+      ]
+    },
+  {
+      "word": "babii",
+      "translation": "猪",
+      "type": "名词",
+      "definition": "家猪；家养的猪。",
+      "examples": [
+        "-menga el babii：吃得像猪一样（暴食）。"
+      ]
+    },
+    {
+      "word": "oubabii",
+      "translation": "养猪；饲养猪",
+      "type": "动词",
+      "definition": "指饲养或圈养猪的行为。",
+      "examples": []
+    },
+    {
+      "word": "babiiureomel",
+      "translation": "野猪",
+      "type": "名词",
+      "definition": "野生的猪（来自短语 babii er a oreomel）。",
+      "examples": []
+    },
+    {
+      "word": "babil",
+      "translation": "女性（已废/古用）",
+      "type": "名词（OBS.）",
+      "definition": "表示“女性”，为较古老或已废弃的用法。",
+      "examples": []
+    },
+    {
+      "word": "delaibabil",
+      "translation": "女性化；柔弱（具贬义）",
+      "type": "动词/状态",
+      "definition": "指（人）变得或表现得女性化、柔弱，可能含贬义。",
+      "examples": []
+    },
+    {
+      "word": "babilchemang",
+      "translation": "母蟹",
+      "type": "名词（OBS.）",
+      "definition": "指雌性的螃蟹，古老或废弃用法。",
+      "examples": [
+        "See babil."
+      ]
+    },
+    {
+      "word": "chebil",
+      "translation": "女人",
+      "type": "名词",
+      "definition": "指女性，仅用于人名或头衔中（OBS. 或特殊场合）。",
+      "examples": []
+    },
+    {
+      "word": "babilngel",
+      "translation": "（参见 babier）",
+      "type": "N. POSS. / 词干",
+      "definition": "与 babier（纸）相关的 possessor 形态，具体含义待进一步核对。",
+      "examples": []
+    },
+    {
+      "word": "bached",
+      "translation": "支架；支撑杆（在独木舟舷外侧）",
+      "type": "名词",
+      "definition": "指独木舟 outrigger 一侧突出用于平衡和固定装备的支架，通常有六个。",
+      "examples": []
+    },
+    {
+      "word": "bechedel",
+      "translation": "possessor 形态（与 bached 相关）",
+      "type": "N. POSS.",
+      "definition": "可能是 bached 的所有格形式或衍生形，需结合上下文确认。",
+      "examples": []
+    },
+    {
+      "word": "bachedkuteling",
+      "translation": "船端支架",
+      "type": "名词",
+      "definition": "由 bached er a kuteling 演变，指独木舟两端最靠近船头/船尾的支架。",
+      "examples": []
+    },
+    {
+      "word": "bachedulematel",
+      "translation": "船心支架",
+      "type": "名词",
+      "definition": "由 bached er a olematel 演变，指最靠近独木舟中央（bluu）位置的支架。",
+      "examples": []
+    },
+    {
+      "word": "bachedchediilchei",
+      "translation": "船端中部支架",
+      "type": "名词",
+      "definition": "由 bached er a chediilchei 演变，位于每端中部位置的支架，介于 bachedkuteling 与 bachedulematel 之间。",
+      "examples": []
+    },
+        {
+      "word": "bachedchediilchei",
+      "translation": "船端中部突出支架",
+      "type": "名词",
+      "definition": "独木舟每端中部的突出支架，位于 bachedkuteling 与 bachedulematel 之间。参见 bached, chediilchei。",
+      "examples": [
+        "‹ bached er a chediilchei"
+      ]
+    },
+    {
+      "word": "bachediil",
+      "translation": "腹泻",
+      "type": "名词",
+      "definition": "指腹泻的物质，可能与 diil 有关。",
+      "examples": []
+    },
+    {
+      "word": "-bachedilel",
+      "translation": "腹泻的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 bachediil 的所有关系。",
+      "examples": []
+    },
+    {
+      "word": "-oma-chediil",
+      "translation": "患腹泻",
+      "type": "动词",
+      "definition": "1. 不及物动词：患腹泻；2. 及物动词：使……遍布腹泻状。",
+      "examples": [
+        "例：I have diarrhea.",
+        "例：He has diarrhea all over."
+      ]
+    },
+    {
+      "word": "-blachediil",
+      "translation": "无能/腹泻",
+      "type": "动词/名词",
+      "definition": "1. 动词：形容某人束手无策、无能应付事务（轻微贬义）；2. 名词：指腹泻的物质。",
+      "examples": []
+    },
+    {
+      "word": "bachedilos",
+      "translation": "总是腹泻",
+      "type": "动词状态",
+      "definition": "表示某人总是呈现腹泻状态，用于轻微讽刺或贬义，可见于口语中。",
+      "examples": []
+    },
+    {
+      "word": "bachedkuteling",
+      "translation": "船端最外侧支架",
+      "type": "名词",
+      "definition": "独木舟外侧、最靠近每端的突出支架，来源于 'bached er a kuteling'。",
+      "examples": []
+    },
+    {
+      "word": "bachedulematel",
+      "translation": "船中部支架",
+      "type": "名词",
+      "definition": "独木舟中部靠近船心（bluu）的突出支架，来源于 'bached er a olematel'。",
+      "examples": []
+    },
+    {
+      "word": "báchel",
+      "translation": "锁骨；帕劳钱币",
+      "type": "名词",
+      "definition": "指人体的锁骨，同时指一种形状为弯曲棱柱的帕劳钱币。尽管俗称为“men's money”，但实际由女性佩戴，可在生、婚、丧、和平等仪式中交换。该钱币由极坚硬的材料制成，含有铁、铜、锌痕迹，外观类似石头、瓷器或玻璃，可为不透明或半透明，并钻有孔，用作项链佩戴。",
+      "examples": []
+    },
+    {
+      "word": "-bechelel",
+      "translation": "báchel 的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 báchel 的所有关系。",
+      "examples": []
+    },
+    {
+      "word": "bad",
+      "translation": "石头/岩石/珊瑚；横梁；入睡",
+      "type": "名词/动词",
+      "definition": "1. 名词：指石头、岩石、珊瑚，或用作支撑房屋地板的横梁；2. 动词：表示进入睡眠状态。",
+      "examples": [
+        "例：-mo bad go to sleep.",
+        "例：A resechal a rengrir/reng er tir."
+      ]
+    },
+    {
+      "word": "-bedul",
+      "translation": "朋友；依靠之人",
+      "type": "名词（所有格）",
+      "definition": "指在困难时可以依靠、信赖的朋友或支柱。",
+      "examples": []
+    },
+    {
+      "word": "chibekbad",
+      "translation": "小石子；卵石",
+      "type": "名词",
+      "definition": "指小石块或卵石。",
+      "examples": []
+    },
+    {
+      "word": "-bedengang",
+      "translation": "即将入睡",
+      "type": "动词",
+      "definition": "表示某人刚刚或即将入睡。",
+      "examples": []
+    },
+    {
+      "word": "ongollbad",
+      "translation": "一种珊瑚",
+      "type": "名词",
+      "definition": "指一种形状类似菠萝的珊瑚，原文标记为 ‹ongor el bad›。",
+      "examples": []
+    },
+    {
+      "word": "bad el chei",
+      "translation": "海中多孔石",
+      "type": "名词",
+      "definition": "指海中具有多孔结构的石头。",
+      "examples": []
+    },
+    {
+      "word": "-bad el cheled",
+      "translation": "礁上螃蟹",
+      "type": "名词",
+      "definition": "指生活在珊瑚礁上的螃蟹。",
+      "examples": []
+    },
+    {
+      "word": "bad el umad",
+      "translation": "房屋末端横梁",
+      "type": "名词",
+      "definition": "指支撑房屋地板末端的横梁。",
+      "examples": []
+    },
+    {
+      "word": "bad el kerrekar",
+      "translation": "房屋支梁",
+      "type": "名词",
+      "definition": "指支撑房屋地板的横梁，含 bad el umad 在内。",
+      "examples": []
+    },
+    {
+      "word": "bad el uel",
+      "translation": "熟睡",
+      "type": "形容词/状态",
+      "definition": "表示完全入睡、熟睡的状态。",
+      "examples": []
+    },
+    {
+      "word": "bad el chelid",
+      "translation": "一种 trepang",
+      "type": "名词",
+      "definition": "指一种颜色类似珊瑚的 trepang（一种海参类生物）。",
+      "examples": []
+    },
+    {
+      "word": "mo bad",
+      "translation": "去睡觉",
+      "type": "动词短语",
+      "definition": "表示去睡觉或入睡。",
+      "examples": [
+        "例：A resechal a rengrir/reng er tir."
+      ]
+    },
+    {
+      "word": "badek",
+      "translation": "裹尸布",
+      "type": "名词",
+      "definition": "用作裹尸布（或类似物件），用于覆尸或送往亡者之家。",
+      "examples": []
+    },
+    {
+      "word": "bedekel",
+      "translation": "裹尸布的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 badek 的关系。",
+      "examples": []
+    },
+    {
+      "word": "omadek",
+      "translation": "送裹尸布",
+      "type": "动词",
+      "definition": "将裹尸布（或类似物件）送到亡者之家的动作。",
+      "examples": []
+    },
+    {
+      "word": "bladek",
+      "translation": "祖先之灵",
+      "type": "名词",
+      "definition": "指祖先的灵魂，常用作 NRS（名词，宗教、仪式用语）。",
+      "examples": []
+    },
+    {
+      "word": "baderirt",
+      "translation": "药用树",
+      "type": "名词",
+      "definition": "指具有药用价值的树种（例如 kou Cordia subcordata Lam.）。",
+      "examples": []
+    },
+    {
+      "word": "baderitech",
+      "translation": "玄武岩",
+      "type": "名词",
+      "definition": "指玄武岩，即一种火山岩。",
+      "examples": []
+    },
+    {
+      "word": "badluloi",
+      "translation": "传说地点",
+      "type": "名词",
+      "definition": "位于 Ngerrekebesang 的一处地点，据传在帕劳传说中，Mengidabrudkoel 浮着死去的 uloi 鱼抵达于此。",
+      "examples": []
+    },
+    {
+      "word": "badre",
+      "translation": "神父",
+      "type": "名词",
+      "definition": "借自西班牙语 padre，意为神父。",
+      "examples": []
+    },
+    {
+      "word": "baeb",
+      "translation": "管子；风管",
+      "type": "名词",
+      "definition": "指用于管道安装的管子，也指人体中的气管（windpipe）。",
+      "examples": []
+    },
+    {
+      "word": "bebel",
+      "translation": "管子的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 baeb 的关系，或指风管的所有格形式。",
+      "examples": []
+    },
+    {
+      "word": "bai",
+      "translation": "村屋",
+      "type": "名词/副词",
+      "definition": "1. 名词：指村落的公共会屋、宾客屋或社区房屋（英文中常称为 abai）。 2. 副词（bai2 MOD.）：比较上、相对而言；也用于条件句中比较两种情况。",
+      "examples": [
+        "Ng bai soak a kohi er a tii. (我宁愿喝咖啡也不喝茶)",
+        "A bai lebo a Droteo, e ak mong. (如果 Droteo 走，我也跟着走)"
+      ]
+    },
+    {
+      "word": "baibeluu",
+      "translation": "村屋（所有格形式）",
+      "type": "名词",
+      "definition": "来源于 bai er a beluu，表示村屋的所有格形式。",
+      "examples": []
+    },
+    {
+      "word": "nga-ickebai",
+      "translation": "社区屋妾所生子",
+      "type": "名词",
+      "definition": "指由服务于社区屋的女子所生的子女，常用于描述身份。",
+      "examples": []
+    },
+    {
+      "word": "kebtot el bai",
+      "translation": "双村屋",
+      "type": "名词",
+      "definition": "指相邻的两个村屋。",
+      "examples": []
+    },
+    {
+      "word": "bai er a rubak",
+      "translation": "专供老人使用的村屋",
+      "type": "名词",
+      "definition": "指仅供老年人使用的村屋。",
+      "examples": []
+    },
+    {
+      "word": "bai2",
+      "translation": "比较而言",
+      "type": "副词/连词",
+      "definition": "用来表示比较、对比或条件转折，意为“相比较来说”、“反而”或“宁愿”。",
+      "examples": [
+        "Ng bai soak a kohi er a tii. (我宁愿喝咖啡也不喝茶)",
+        "A bai lebo a Droteo, e ak mong. (如果 Droteo 走，我也跟着走)"
+      ]
+    },
+    {
+      "word": "baias",
+      "translation": "斜纹",
+      "type": "名词",
+      "definition": "指缝纫中所用的斜纹，也指偏斜的倾向。",
+      "examples": []
+    },
+    {
+      "word": "baiking",
+      "translation": "病菌；不卫生",
+      "type": "名词/动词",
+      "definition": "1. 名词：指病菌、微生物或疾病；2. 动词（弱化形式）：形容一个人卫生习惯差、不整洁。",
+      "examples": []
+    },
+    {
+      "word": "bachedchediilchei",
+      "translation": "船端中部突出支架",
+      "type": "名词",
+      "definition": "指独木舟每端中部的突出支架，位于 bachedkuteling 与 bachedulematel 之间；参见 bached, chediilchei。",
+      "examples": [
+        "‹ bached er a chediilchei"
+      ]
+    },
+    {
+      "word": "bachediil",
+      "translation": "腹泻",
+      "type": "名词",
+      "definition": "指腹泻的物质，可能与词根 diil 有关。",
+      "examples": []
+    },
+    {
+      "word": "-bachedilel",
+      "translation": "腹泻的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 bachediil 的所有关系。",
+      "examples": []
+    },
+    {
+      "word": "-oma-chediil",
+      "translation": "患腹泻",
+      "type": "动词",
+      "definition": "1. 不及物动词：患腹泻；2. 及物动词：使某物遍布腹泻状态。",
+      "examples": [
+        "例：I have diarrhea.",
+        "例：He has diarrhea all over."
+      ]
+    },
+    {
+      "word": "-blachediil",
+      "translation": "无能/腹泻",
+      "type": "动词/名词",
+      "definition": "1. 动词：形容某人无能、束手无策（带轻微贬义）；2. 名词：指腹泻的物质（用于轻微侮辱）。",
+      "examples": []
+    },
+    {
+      "word": "bachedilos",
+      "translation": "总是腹泻",
+      "type": "动词状态",
+      "definition": "表示某人或某物总处于腹泻状态，用于轻微讽刺或贬义。",
+      "examples": []
+    },
+    {
+      "word": "bachedkuteling",
+      "translation": "船端最外侧支架",
+      "type": "名词",
+      "definition": "独木舟外侧最靠近每端的突出支架，来源于 'bached er a kuteling'。",
+      "examples": []
+    },
+    {
+      "word": "bachedulematel",
+      "translation": "船中部支架",
+      "type": "名词",
+      "definition": "独木舟中部靠近船心（bluu）的突出支架，来源于 'bached er a olematel'。",
+      "examples": []
+    },
+    {
+      "word": "bachel",
+      "translation": "锁骨/帕劳钱币",
+      "type": "名词",
+      "definition": "1. 指人体的锁骨；2. 指一种以弯曲棱柱形态制成的帕劳钱币。虽然俗称“men's money”，但实际由女性佩戴，可用于生、婚、丧、和平等仪式中交换。材料坚硬，含有铁、铜、锌痕迹，外观类似石、瓷或玻璃，可呈不透明或半透明状态，钻孔后制成项链。",
+      "examples": []
+    },
+    {
+      "word": "-bechelel",
+      "translation": "锁骨/钱币的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 bachel 的关系。",
+      "examples": []
+    },
+    {
+      "word": "bad",
+      "translation": "石头/岩石/珊瑚；横梁；入睡",
+      "type": "名词/动词",
+      "definition": "1. 名词：指石头、岩石、珊瑚，或支持房屋地板的横梁；2. 动词：表示进入睡眠状态。",
+      "examples": [
+        "例：-mo bad, meaning 'go to sleep'.",
+        "例：A resechal a rengrir/reng er tir."
+      ]
+    },
+    {
+      "word": "-bedul",
+      "translation": "依靠之人",
+      "type": "名词（所有格）",
+      "definition": "指在困难时可依靠的朋友或支柱。",
+      "examples": []
+    },
+    {
+      "word": "chibekbad",
+      "translation": "小卵石",
+      "type": "名词",
+      "definition": "指小石块或卵石。",
+      "examples": []
+    },
+    {
+      "word": "-bedengang",
+      "translation": "即将入睡",
+      "type": "动词",
+      "definition": "表示某人即将或刚刚入睡。",
+      "examples": []
+    },
+    {
+      "word": "ongollbad",
+      "translation": "菠萝状珊瑚",
+      "type": "名词",
+      "definition": "指一种形状类似菠萝的珊瑚。",
+      "examples": []
+    },
+    {
+      "word": "bad el chei",
+      "translation": "海中多孔石",
+      "type": "名词",
+      "definition": "指海中具有多孔结构的石头。",
+      "examples": []
+    },
+    {
+      "word": "-bad el cheled",
+      "translation": "礁上蟹",
+      "type": "名词",
+      "definition": "指生活在珊瑚礁上的螃蟹。",
+      "examples": []
+    },
+    {
+      "word": "bad el umad",
+      "translation": "房屋末端横梁",
+      "type": "名词",
+      "definition": "指支撑房屋地板末端的横梁。",
+      "examples": []
+    },
+    {
+      "word": "bad el kerrekar",
+      "translation": "房屋支梁",
+      "type": "名词",
+      "definition": "指支撑房屋地板的横梁（包括 bad el umad）。",
+      "examples": []
+    },
+    {
+      "word": "bad el uel",
+      "translation": "熟睡",
+      "type": "形容词/状态",
+      "definition": "表示完全入睡或熟睡。",
+      "examples": []
+    },
+    {
+      "word": "bad el chelid",
+      "translation": "一种 trepang",
+      "type": "名词",
+      "definition": "指一种颜色类似珊瑚的 trepang（一种海参类生物）。",
+      "examples": []
+    },
+    {
+      "word": "mo bad",
+      "translation": "去睡觉",
+      "type": "动词短语",
+      "definition": "表示去睡觉或进入睡眠状态。",
+      "examples": [
+        "例：A resechal a rengrir/reng er tir."
+      ]
+    },
+    {
+      "word": "baiong",
+      "translation": "伞",
+      "type": "名词",
+      "definition": "指伞，可能借自马来语，用于遮雨或遮阳。",
+      "examples": [
+        "báiong (? Malay) N. umbrella."
+      ]
+    },
+    {
+      "word": "bailengel",
+      "translation": "伞的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 baiong 的所有关系。",
+      "examples": [
+        "-bailengel N. POSS."
+      ]
+    },
+    {
+      "word": "oubaiong",
+      "translation": "使用伞",
+      "type": "动词",
+      "definition": "表示拥有或使用伞的动作。",
+      "examples": [
+        "-oubáiong v. I. have or use an umbrella."
+      ]
+    },
+    {
+      "word": "bais",
+      "translation": "游荡",
+      "type": "名词",
+      "definition": "指四处游荡或漫无目的走动的行为。",
+      "examples": [
+        "báis N. action of wandering around."
+      ]
+    },
+    {
+      "word": "bisel",
+      "translation": "游荡的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 bais 的所有关系。",
+      "examples": [
+        "-bisél N. POSS."
+      ]
+    },
+    {
+      "word": "omais",
+      "translation": "游荡",
+      "type": "动词",
+      "definition": "表示走来走去、来回走动或频繁旅行。",
+      "examples": [
+        "-omáis v. I. wander; walk around; go back and forth; travel frequently."
+      ]
+    },
+    {
+      "word": "sckebais",
+      "translation": "易游荡",
+      "type": "动词",
+      "definition": "形容某人倾向于游荡或走动。",
+      "examples": [
+        "—sckebáis V. S. prone to wandering or walking around."
+      ]
+    },
+    {
+      "word": "baiu",
+      "translation": "遮篷",
+      "type": "名词",
+      "definition": "指临时遮挡雨或阳光的遮盖物，即雨篷或阳篷。",
+      "examples": [
+        "baiú N. temporary protective covering against rain or sun; canopy."
+      ]
+    },
+    {
+      "word": "bakelungal",
+      "translation": "大型黑色海参",
+      "type": "名词",
+      "definition": "指在珊瑚礁上发现的一种大型黑色 trepang（海参）。",
+      "examples": [
+        "bakelungál N. type of large, black trepang found on reef."
+      ]
+    },
+    {
+      "word": "bakerus",
+      "translation": "Bakerus氏族",
+      "type": "名词",
+      "definition": "Imeliik 地区的一个氏族名称；衍生词 -Dirra-bakcrus 指传说中 Miladeldil 移居后嫁入 Tkedelukl 氏族的名称。",
+      "examples": [
+        "Bakerús N. name of clan in Imeliik.",
+        "-Dirra-bakcrus N. (in Palauan legend) name of Miladeldil after she moved to Ngerdebotar and married Tkedelukl."
+      ]
+    },
+    {
+      "word": "bakes",
+      "translation": "步伐/一步",
+      "type": "名词",
+      "definition": "指行走时的一步；可引申为命运或走向。",
+      "examples": [
+        "bákes N. step (in walking)."
+      ]
+    },
+    {
+      "word": "bekesel",
+      "translation": "步伐的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 bakes 的所有关系；亦引申为命运。",
+      "examples": [
+        "-bekesél N. POSS."
+      ]
+    },
+    {
+      "word": "omakes",
+      "translation": "走路",
+      "type": "动词",
+      "definition": "表示走路、迈步；可指移动双腿以行走。",
+      "examples": [
+        "-omákes v. I. walk; take a step. 2. V. T. move (legs) to walk."
+      ]
+    },
+    {
+      "word": "blakes",
+      "translation": "步态",
+      "type": "名词",
+      "definition": "指行走的步速或步态。",
+      "examples": [
+        "blákes V.R. s. blekeklél N. R. S. OBLIG. POS. pace; gait."
+      ]
+    },
+    {
+      "word": "bekesal",
+      "translation": "命运/步态（命令式）",
+      "type": "动词",
+      "definition": "可能表示强制性的步伐或命运（口语用法）。",
+      "examples": [
+        "-bekesál! V. A. S."
+      ]
+    },
+    {
+      "word": "telbakes",
+      "translation": "一步",
+      "type": "名词",
+      "definition": "表示单一的一步。",
+      "examples": [
+        "-telbákes N. one step."
+      ]
+    },
+    {
+      "word": "baket",
+      "translation": "水桶",
+      "type": "名词",
+      "definition": "指桶、提桶，常用于装水等液体。",
+      "examples": [
+        "báket (Eng. bucket) N. bucket; pail."
+      ]
+    },
+    {
+      "word": "baketengel",
+      "translation": "桶的所有格；思维如筛",
+      "type": "名词（所有格）",
+      "definition": "原指 baket 的所有格，衍生用法引申为形容一个人思维像筛子，即言语空洞或容易受骗。",
+      "examples": [
+        "Ke mla tmuulsoiseb er a baketengel a Toki. You've fallen for everything Toki says. / Toki really has you on a string."
+      ]
+    },
+    {
+      "word": "bakllild",
+      "translation": "scleria",
+      "type": "名词",
+      "definition": "指一种叶片有锐边的植物，学名可能为 scleria。",
+      "examples": []
+    },
+    {
+      "word": "baks",
+      "translation": "箱子",
+      "type": "名词",
+      "definition": "指用任何材料制成的箱子或盒子。",
+      "examples": []
+    },
+    {
+      "word": "beksel",
+      "translation": "箱子的所有格",
+      "type": "名词（所有格）",
+      "definition": "表示属于 baks 的所有关系。",
+      "examples": []
+    },{
+  "word": "bakudang",
+  "translation": "炸弹；爆炸",
+  "type": "名词",
+  "definition": "指炸弹、爆炸物、空袭、轰炸等。",
+  "example": ""
+},
+{
+  "word": "bakuhats",
+  "translation": "爆炸",
+  "type": "动词",
+  "definition": "表示爆炸的动作。",
+  "example": ""
+},
+{
+  "word": "bakutsi",
+  "translation": "赌博；二十一点",
+  "type": "名词",
+  "definition": "指赌博或‘二十一点’纸牌游戏。",
+  "example": ""
+},
+{
+  "word": "oubakutsi",
+  "translation": "玩二十一点",
+  "type": "动词",
+  "definition": "表示玩‘二十一点’纸牌游戏的行为。",
+  "example": ""
+},
+     {
+        "word": "bakudang",
+        "translation": "炸弹；爆炸",
+        "type": "名词",
+        "definition": "指炸弹、爆炸物、空袭、轰炸等。",
+        "examples": []
+    },
+    {
+        "word": "bakuhats",
+        "translation": "爆炸",
+        "type": "动词",
+        "definition": "表示爆炸的动作。",
+        "examples": []
+    },
+    {
+        "word": "bakutsi",
+        "translation": "赌博；二十一点",
+        "type": "名词",
+        "definition": "指赌博或‘二十一点’纸牌游戏。",
+        "examples": []
+    },
+    {
+        "word": "oubakutsi",
+        "translation": "玩二十一点",
+        "type": "动词",
+        "definition": "表示玩‘二十一点’纸牌游戏的行为。",
+        "examples": []
+    },
+    {
+        "word": "chad er a bakutsi",
+        "translation": "赌徒",
+        "type": "名词",
+        "definition": "指经常赌博的人。",
+        "examples": []
+    },
+    {
+        "word": "bal-, belengel (a rengul)",
+        "translation": "惊讶；惊奇",
+        "type": "名词（义务所有格）",
+        "definition": "指惊讶、惊奇或令人赞叹的情绪，可能与‘bar-, berngel’有关。",
+        "examples": []
+    },
+    {
+        "word": "omal (er a rengul)",
+        "translation": "使惊讶；使敬佩",
+        "type": "动词",
+        "definition": "表示使某人惊讶、敬佩或赞叹的行为。",
+        "examples": []
+    },
+    {
+        "word": "blal",
+        "translation": "被惊讶",
+        "type": "动词（被动）",
+        "definition": "表示某人或某物被惊讶。",
+        "examples": []
+    },
+    {
+        "word": "kebal",
+        "translation": "彼此惊讶",
+        "type": "动词（互相）",
+        "definition": "表示两个人或多个个体相互感到惊讶。",
+        "examples": []
+    },
+    {
+        "word": "balang",
+        "translation": "雅浦岛石币",
+        "type": "名词",
+        "definition": "指雅浦岛使用的大型石币。",
+        "examples": []
+    },
+    {
+        "word": "balas",
+        "translation": "ballas（钻石矿石的一种）",
+        "type": "名词",
+        "definition": "与‘ballas’同义，指一种钻石矿石。",
+        "examples": []
+    },
+    {
+        "word": "balech",
+        "translation": "弹弓；箭",
+        "type": "名词",
+        "definition": "指弹弓或类似材料（如橡皮筋）制作的弹弓；箭；使用弹弓射击的动作。",
+        "examples": []
+    },
+    {
+        "word": "belechel a belochel",
+        "translation": "用弹弓射鸽子",
+        "type": "名词",
+        "definition": "指用弹弓射击鸽子的行为。",
+        "examples": []
+    },
+    {
+        "word": "belechel a ngikel",
+        "translation": "用鱼枪捕鱼",
+        "type": "名词",
+        "definition": "指用鱼枪捕鱼的行为。",
+        "examples": []
+    },
+    {
+        "word": "omalech",
+        "translation": "用弹弓击中",
+        "type": "动词",
+        "definition": "表示用弹弓击中目标；用鱼枪捕鱼；用 kitalong 弹线以标记木材。",
+        "examples": []
+    },
+    {
+        "word": "blalech",
+        "translation": "弹弓伤口",
+        "type": "名词",
+        "definition": "指因弹弓射击造成的伤口。",
+        "examples": []
+    },
+    {
+        "word": "belochel",
+        "translation": "密克罗尼西亚鸽",
+        "type": "名词",
+        "definition": "指密克罗尼西亚鸽（Ducula oceanica）。",
+        "examples": []
+    },
+    {
+        "word": "belechall",
+        "translation": "容易用弹弓射击",
+        "type": "动词",
+        "definition": "表示某物容易用弹弓射击。",
+        "examples": []
+    },
+    {
+        "word": "kebalech",
+        "translation": "互相用弹弓射击",
+        "type": "动词",
+        "definition": "表示两人互相用弹弓射击。",
+        "examples": []
+    },
+    {
+        "word": "ngikel el balech",
+        "translation": "用鱼枪捕获的鱼",
+        "type": "名词",
+        "definition": "指用鱼枪捕获的鱼。",
+        "examples": []
+    },
+    {
+        "word": "chad er a balech",
+        "translation": "弓箭手",
+        "type": "名词",
+        "definition": "指射箭者。",
+        "examples": []
+    },
+    {
+        "word": "balech",
+        "translation": "独眼",
+        "type": "形容词",
+        "definition": "形容只有一只眼睛的人或动物。",
+        "examples": []
+    },
+    {
+        "word": "balas",
+        "translation": "压舱物",
+        "type": "名词",
+        "definition": "指用于保持稳定性的压舱物或潜水时所携带的配重。",
+        "examples": []
+    },
+    {
+        "word": "bals",
+        "translation": "歌唱错误",
+        "type": "名词",
+        "definition": "指歌曲或唱歌中的错误。",
+        "examples": []
+    },
+    {
+        "word": "bambuu",
+        "translation": "竹子",
+        "type": "名词",
+        "definition": "指竹子。",
+        "examples": []
+    },
+    {
+        "word": "bambungel",
+        "translation": "竹竿",
+        "type": "名词",
+        "definition": "用于支撑某些物品的竹竿。",
+        "examples": []
+    },
+    {
+        "word": "redil el bambuu",
+        "translation": "支撑 kerrikr 的竹竿",
+        "type": "名词",
+        "definition": "指用于支撑 kerrikr 的竹竿。",
+        "examples": []
+    },
+    {
+        "word": "ban",
+        "translation": "强壮；健康",
+        "type": "形容词",
+        "definition": "指身体强壮、健康。",
+        "examples": []
+    },
+    {
+        "word": "bandelengel",
+        "translation": "属于 bando",
+        "type": "名词",
+        "definition": "与 bando 相关的物品或部分。",
+        "examples": []
+    },
+    {
+        "word": "bando",
+        "translation": "腰带",
+        "type": "名词",
+        "definition": "指腰带（源自日语‘バンド’）。",
+        "examples": []
+    },
+    {
+        "word": "bang",
+        "translation": "亮鞍海鲷",
+        "type": "名词",
+        "definition": "指亮鞍海鲷（Parupeneus cyclostomus）。",
+        "examples": []
+    },
+    {
+        "word": "mesebang",
+        "translation": "某种海鲷",
+        "type": "名词",
+        "definition": "指某种类型的海鲷。",
+        "examples": []
+    },
+    {
+        "word": "turangelbang",
+        "translation": "某种海鲷",
+        "type": "名词",
+        "definition": "指某种类型的海鲷。",
+        "examples": []
+    },
+    {
+        "word": "bangarnguis",
+        "translation": "与 bangernguis 同义",
+        "type": "名词",
+        "definition": "与 bangernguis 具有相同的意思。",
+        "examples": []
+    },
+    {
+        "word": "bangch",
+        "translation": "咬",
+        "type": "名词",
+        "definition": "指咬的动作或咬痕。",
+        "examples": []
+    },
+    {
+        "word": "bengchet",
+        "translation": "咬",
+        "type": "名词（所有格）",
+        "definition": "指属于某人的咬痕。",
+        "examples": []
+    },
+    {
+        "word": "omangch",
+        "translation": "咬",
+        "type": "动词",
+        "definition": "表示用牙齿咬住某物。",
+        "examples": []
+    },
+    {
+        "word": "blangch",
+        "translation": "被咬",
+        "type": "动词（被动）",
+        "definition": "表示某物或某人被咬。",
+        "examples": []
+    },
+    {
+        "word": "bengechel",
+        "translation": "咬的动作",
+        "type": "动词（主动态）",
+        "definition": "指进行咬的动作。",
+        "examples": []
+    },
+    {
+        "word": "kebangch",
+        "translation": "有咬人的习性",
+        "type": "动词",
+        "definition": "指狗或其他动物有咬人的习惯。",
+        "examples": []
+    },
+    {
+        "word": "bembangch",
+        "translation": "红色咬人蚂蚁",
+        "type": "名词",
+        "definition": "指一种带有刺痛感的红色蚂蚁。",
+        "examples": []
+    },
+    {
+        "word": "obangch",
+        "translation": "被咬",
+        "type": "动词（被动）",
+        "definition": "表示某人或某物被咬伤。",
+        "examples": []
+    },
+    {
+        "word": "omengbangch",
+        "translation": "感觉刺痛",
+        "type": "动词",
+        "definition": "指手臂、腿等部位感到刺痛。",
+        "examples": []
+    },
+    {
+        "word": "sekebangch",
+        "translation": "容易咬人",
+        "type": "动词（状态）",
+        "definition": "形容某种动物或人容易咬人。",
+        "examples": []
+    },
+    {
+        "word": "meringel a bengchel",
+        "translation": "咬合力强",
+        "type": "短语",
+        "definition": "表示咬合力很强，容易造成伤害。",
+        "examples": []
+    },
+    {
+        "word": "bangd",
+        "translation": "弹跳；回弹；悬挂（车的悬挂系统）",
+        "type": "名词",
+        "definition": "指物体弹起或回弹的现象，也可用于描述汽车的悬挂系统。",
+        "examples": ["Ng kmal ungil a bangd er a mlim. 你的车行驶得很平稳。"]
+    },
+    {
+        "word": "bengdél",
+        "translation": "弹跳的所有格",
+        "type": "名词（所有格）",
+        "definition": "指属于某人的弹跳。",
+        "examples": []
+    },
+    {
+        "word": "bedebangd",
+        "translation": "有弹性的；弹跳力好的",
+        "type": "形容词",
+        "definition": "形容某物有良好的弹跳力。",
+        "examples": []
+    },
+    {
+        "word": "bangd2",
+        "translation": "乐队；管弦乐队",
+        "type": "名词",
+        "definition": "指一组音乐家组成的乐队或管弦乐队。",
+        "examples": []
+    },
+    {
+        "word": "bangderang",
+        "translation": "旗帜；横幅",
+        "type": "名词",
+        "definition": "指旗帜或横幅。",
+        "examples": ["Ng dechor a bangderang. 旗帜正在飘扬。"]
+    },
+    {
+        "word": "bangernguis",
+        "translation": "flagelleria 植物；flagelleria 之珠",
+        "type": "名词",
+        "definition": "指 flagelleria 植物（抛出时会在地上跳动），或由该植物制成的珠子。",
+        "examples": ["参见 nguis, omang。"]
+    },
+    {
+        "word": "bangikoi",
+        "translation": "蝴蝶；蛾",
+        "type": "名词",
+        "definition": "指蝴蝶或蛾。",
+        "examples": []
+    },
+    {
+        "word": "bangikoi2",
+        "translation": "喜好更换伴侣",
+        "type": "动词",
+        "definition": "指经常更换恋人或伴侣的人。",
+        "examples": []
+    },
+    {
+        "word": "bangk",
+        "translation": "银行；金库；存钱处",
+        "type": "名词",
+        "definition": "指银行、存钱的地方、保险柜或金库。",
+        "examples": []
+    },
+    {
+        "word": "bengkel",
+        "translation": "银行的所有格",
+        "type": "名词（所有格）",
+        "definition": "指属于某人的银行。",
+        "examples": []
+    },
+    {
+        "word": "bangk2",
+        "translation": "爆胎；胎压不足；（女性）分娩",
+        "type": "动词",
+        "definition": "指轮胎爆裂或胎压不足，也可表示女性分娩。",
+        "examples": ["Ng mla bangk a taia er a mlik. 我的轮胎爆了。"]
+    },
+    {
+        "word": "bangkeik",
+        "translation": "薄煎饼",
+        "type": "名词",
+        "definition": "指薄煎饼（pancake）。",
+        "examples": []
+    },
+    {
+        "word": "bangi",
+        "translation": "中断",
+        "type": "名词（义务所有格）",
+        "definition": "指中断或打断。",
+        "examples": []
+    },
+    {
+        "word": "omang",
+        "translation": "打断；假装攻击但中途停止",
+        "type": "动词",
+        "definition": "指打断或开始攻击（如挥拳或用矛刺）但中途停止，以迷惑对方。",
+        "examples": []
+    },
+    {
+        "word": "sechal el bambuu",
+        "translation": "支撑 sechal el kerrikr 的竹竿",
+        "type": "名词",
+        "definition": "指用于支撑 sechal el kerrikr 的竹竿。",
+        "examples": []
+    },
+    {
+        "word": "blangl",
+        "translation": "一半",
+        "type": "形容词",
+        "definition": "表示某物处于一半的状态。",
+        "examples": []
+    },
+    {
+        "word": "bengall",
+        "translation": "打断的动作",
+        "type": "动词（主动态）",
+        "definition": "指进行打断或中断的行为。",
+        "examples": []
+    },
+
+]
+
+    function normalize(str) {
+  return str.replace(/（.*?）/g, '').trim();
+}
+
+// 将词典转换为数组形式，以便 Fuse.js 进行模糊搜索
+const dictionaryArray = Object.entries(dictionary).map(([word, data]) => ({
+  word,
+  normalizedWord: normalize(word),  // 预处理去掉括号
+  normalizedTranslation: normalize(data.translation),  // 预处理去掉括号
+  ...data
+}));
+
+// 配置 Fuse.js，支持帕劳语（word）和中文（translation）的模糊匹配
+const fuse = new Fuse(dictionaryArray, {
+  keys: ['word', 'normalizedWord', 'translation', 'normalizedTranslation'],
+  threshold: 0.4
+});
+
+// 监听表单提交事件
+document.getElementById('dictForm').addEventListener('submit', function(event) {
+  event.preventDefault();
+
+  const inputWord = document.getElementById('input-word').value.trim();
+  const languageDirection = document.getElementById('language').value;
+  const resultDiv = document.getElementById('result');
+
+  if (!inputWord) {
+    resultDiv.innerHTML = "请输入要翻译的词汇！";
+    return;
+  }
+  if (languageDirection === "请选择") {
+    resultDiv.innerHTML = "请选择语言方向！";
+    return;
+  }
+
+  let resultList = [];
+
+  if (languageDirection === "pw-to-cn") {
+    // 帕劳语 -> 中文：先精确匹配，再模糊搜索
+    const exact = dictionaryArray.filter(item => normalize(item.word) === normalize(inputWord));
+    if (exact.length > 0) {
+      resultList = exact;
+    } else {
+      const fuzzyResults = fuse.search(inputWord);
+      if (fuzzyResults.length === 1) {
+        resultList = [fuzzyResults[0].item];
+      } else if (fuzzyResults.length > 1) {
+        let suggestionHtml = "未找到精确匹配，你是否要搜索以下词语：<ul>";
+        fuzzyResults.forEach(res => {
+          suggestionHtml += `<li onclick="document.getElementById('input-word').value='${res.item.word}'; document.getElementById('dictForm').dispatchEvent(new Event('submit'));">${res.item.word} (${res.item.translation})</li>`;
+        });
+        suggestionHtml += "</ul>";
+        resultDiv.innerHTML = suggestionHtml;
+        return;
+      }
+    }
+  } else {
+    // 中文 -> 帕劳语：先精确匹配，再模糊搜索
+    const found = dictionaryArray.filter(item => normalize(item.translation) === normalize(inputWord));
+    if (found.length > 0) {
+      resultList = found;
+    } else {
+      const fuzzyResults = fuse.search(inputWord);
+      if (fuzzyResults.length === 1) {
+        resultList = [fuzzyResults[0].item];
+      } else if (fuzzyResults.length > 1) {
+        let suggestionHtml = "未找到精确匹配，你是否要搜索以下词语：<ul>";
+        fuzzyResults.forEach(res => {
+          suggestionHtml += `<li onclick="document.getElementById('input-word').value='${res.item.translation}'; document.getElementById('dictForm').dispatchEvent(new Event('submit'));">${res.item.translation} (${res.item.word})</li>`;
+        });
+        suggestionHtml += "</ul>";
+        resultDiv.innerHTML = suggestionHtml;
+        return;
+      }
+    }
+  }
+
+  // 渲染结果：显示帕劳语词条（加粗）、中文释义、词性、释义和示例
+  if (resultList.length === 0) {
+    resultDiv.innerHTML = "未找到翻译结果";
+  } else {
+    let output = "";
+    resultList.forEach(item => {
+      output += `
+        <div style="margin:10px 0;">
+          <span style="color: rgb(19, 0, 102); font-size: 20px;"><b>${item.word}</b></span><br>
+          <b>中文释义：</b> ${item.translation}<br>
+          <b>词性：</b> ${item.type || "无"}<br>
+          <b>释义：</b> ${item.definition || "暂无释义"}<br>
+          <b>示例：</b> ${item.example || "暂无示例"}
+        </div>
+      `;
+    });
+    resultDiv.innerHTML = output;
+  }
+});
+</script>
+</body>
+</html>
