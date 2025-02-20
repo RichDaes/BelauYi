@@ -5,154 +5,115 @@
   <title>中译帕词典</title>
   <style type="text/css">
     html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background-color: antiquewhite;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background: url("https://images.pexels.com/photos/26926255/pexels-photo-26926255.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2") no-repeat center center fixed;
+        background-size: cover;
     }
+
     body {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background-color: rgba(0, 0, 0, 0.5); /* 半透明背景，增强文字可读性 */
     }
+
     .top {
-      width: 100%;
-      padding: 30px;
-      background-color: rgb(225, 216, 163);
-      text-align: center;
+        width: 100%;
+        padding: 30px;
+        background-color: rgba(255, 199, 44, 0.9); /* 半透明金黄色 */
+        text-align: center;
+        color: #4D3A00;
+        font-size: 28px;
+        font-weight: bold;
     }
-    .top a {
-      position: relative;
-      top: 10px;
-      font-size: 25px;
-      color: rgb(19, 0, 102);
-      text-decoration: none;
-    }
+
     .main {
-      display: flex;
-      width: 100%;
-      margin: 15px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin: 20px 0;
+        color: white; /* 设置文字颜色为白色 */
     }
-    .advertisement {
-      width: 30%;
-      border-right: 1px solid gray;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+
+    .search-box {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.8); /* 半透明白色背景 */
+        padding: 15px;
+        border-radius: 30px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     }
-    .advertisement img {
-      width: 160px;
-      height: 100px;
+
+    .search-box input[type="search"] {
+        width: 300px;
+        padding: 10px;
+        border: none;
+        border-radius: 20px;
+        font-size: 16px;
+        outline: none;
+        margin-right: 10px;
     }
-    .search {
-      width: 70%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex-grow: 1;
+
+    .search-box button[type="submit"] {
+        padding: 10px 20px;
+        background-color: #FFC72C;
+        color: #4D3A00;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
     }
-    .search form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+
+    .search-box input[type="submit"]:hover {
+        background-color: #E6A700;
     }
-    .searchSubmit {
-      display: flex;
-      margin-bottom: 20px;
-      transform: scale(1.5);
-    }
-    .searchSubmit input[type="search"] {
-      width: 300px;
-      padding: 5px;
-      border: 1px solid #2F5DF2;
-      border-radius: 20px;
-      font-size: 12px;
-    }
-    .searchSubmit input[type="submit"] {
-      padding: 5px 15px;
-      background-color: #2F5DF2;
-      color: #FFFFFF;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      margin-left: -55px;
-    }
-    .searchSubmit input[type="submit"]:hover {
-      background-color: #1E3D8B;
-    }
-    .language {
-      margin-top: 10px;
-    }
-    .language img {
-      width: 5px;
-      height: 10px;
-    }
+
     #result {
-      margin-top: 20px;
-      font-size: 18px;
-      color: #333;
-      text-align: left;
+        margin-top: 20px;
+        font-size: 18px;
+        color: #333;
+        text-align: left;
+        background: rgba(255, 255, 255, 0.9); 
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     }
-
-    ul {
-      list-style: none;
-       padding-left: 0;
-       }
-
-    li { 
-      margin-bottom: 5px;
-       cursor: pointer;
-       }
-
-    li:hover { 
-      background-color: #f0f0f0;
-     }
 
     .footer {
-      background-color: gray;
-      width:100%;
-      height: 60px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+        background-color: rgba(0, 68, 102, 0.9);
+        color: white;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 16px;
     }
-    .footer img {
-      width: 40px;
-      height: 40px;
-    }
-  </style>
-  <!-- 引入 Fuse.js -->
-  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+</style>
 </head>
 <body>
-  <div class="top">
-    <a class="title">中文翻译帕劳语词典&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Chinese --> Palauan Dictionary</a>
-  </div>
-  <div class="main">
-    <div class="advertisement">
-      <img src="images/Flag-Palau.webp" alt="Palau Flag">
-    </div>
-    <div class="search">
+<div class="top">
+    BELAUYI.COM - 中译帕词典
+</div>
+<div class="main">
+    <h2 style="color: #FFC72C; font-size: 24px;">智能匹配 | 快速翻译 | 拼写无忧！</h2>
+    <div class="search-box">
       <form id="dictForm">
-        <div class="searchSubmit">
-          <input type="search" id="input-word" placeholder="输入中文词汇">
-          <input type="submit" id="search-btn" value="翻译">
-        </div>
-        <div class="language">
-          <label for="language">语言</label>
-          <select id="language">
-            <option>请选择</option>
-            <option value="cn-to-pw">🇨🇳 -> 🇵🇼</option>
-            <option value="pw-to-cn">🇵🇼 -> 🇨🇳</option>
-          </select>
-        </div>
-      </form>
-      <div id="result"></div>
+        <input type="search" id="input-word" placeholder="输入中文或帕劳语 / Enter Chinese or Palauan">
+        <button type="submit" id="search-btn">翻译 / Translate</button>
+    </form>
     </div>
-  </div>
-  <div class="footer">
-    <img src="images/footer-icon.png" alt="Footer Icon">
-  </div>
+    <div id="result"></div>
+</div>
+<div class="footer">
+    立即访问 BelauYi.com | 联系电话: (680) 770 - 2868
+</div>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
   <script>
     // 完整词典数据（共 30 个词条），所有注音（重音符号）均已去除
     const dictionary = [
@@ -1629,102 +1590,61 @@
 
 ]
 
-    function normalize(str) {
-  return str.replace(/（.*?）/g, '').trim();
+function normalize(str) {
+    return (str || '').replace(/（.*?）/g, '').trim().toLowerCase();
 }
 
-// 将词典转换为数组形式，以便 Fuse.js 进行模糊搜索
-const dictionaryArray = Object.entries(dictionary).map(([word, data]) => ({
-  word,
-  normalizedWord: normalize(word),  // 预处理去掉括号
-  normalizedTranslation: normalize(data.translation),  // 预处理去掉括号
-  ...data
+// ✅ 初始化词典数据
+const dictionaryArray = dictionary.map(entry => ({
+    ...entry,
+    normalizedWord: normalize(entry.word),
+    normalizedTranslation: normalize(entry.translation)
 }));
 
-// 配置 Fuse.js，支持帕劳语（word）和中文（translation）的模糊匹配
+// ✅ 初始化 Fuse.js（模糊搜索）
 const fuse = new Fuse(dictionaryArray, {
-  keys: ['word', 'normalizedWord', 'translation', 'normalizedTranslation'],
-  threshold: 0.4
+    keys: ['word', 'normalizedWord', 'translation', 'normalizedTranslation'],
+    threshold: 0.4
 });
 
-// 监听表单提交事件
+// ✅ 监听表单提交
 document.getElementById('dictForm').addEventListener('submit', function(event) {
-  event.preventDefault();
+    event.preventDefault();
 
-  const inputWord = document.getElementById('input-word').value.trim();
-  const languageDirection = document.getElementById('language').value;
-  const resultDiv = document.getElementById('result');
+    const inputWord = normalize(document.getElementById('input-word').value.trim());
+    const resultDiv = document.getElementById('result');
 
-  if (!inputWord) {
-    resultDiv.innerHTML = "请输入要翻译的词汇！";
-    return;
-  }
-  if (languageDirection === "请选择") {
-    resultDiv.innerHTML = "请选择语言方向！";
-    return;
-  }
-
-  let resultList = [];
-
-  if (languageDirection === "pw-to-cn") {
-    // 帕劳语 -> 中文：先精确匹配，再模糊搜索
-    const exact = dictionaryArray.filter(item => normalize(item.word) === normalize(inputWord));
-    if (exact.length > 0) {
-      resultList = exact;
-    } else {
-      const fuzzyResults = fuse.search(inputWord);
-      if (fuzzyResults.length === 1) {
-        resultList = [fuzzyResults[0].item];
-      } else if (fuzzyResults.length > 1) {
-        let suggestionHtml = "未找到精确匹配，你是否要搜索以下词语：<ul>";
-        fuzzyResults.forEach(res => {
-          suggestionHtml += `<li onclick="document.getElementById('input-word').value='${res.item.word}'; document.getElementById('dictForm').dispatchEvent(new Event('submit'));">${res.item.word} (${res.item.translation})</li>`;
-        });
-        suggestionHtml += "</ul>";
-        resultDiv.innerHTML = suggestionHtml;
+    if (!inputWord) {
+        resultDiv.innerHTML = "请输入要翻译的词汇！";
         return;
-      }
     }
-  } else {
-    // 中文 -> 帕劳语：先精确匹配，再模糊搜索
-    const found = dictionaryArray.filter(item => normalize(item.translation) === normalize(inputWord));
-    if (found.length > 0) {
-      resultList = found;
-    } else {
-      const fuzzyResults = fuse.search(inputWord);
-      if (fuzzyResults.length === 1) {
-        resultList = [fuzzyResults[0].item];
-      } else if (fuzzyResults.length > 1) {
-        let suggestionHtml = "未找到精确匹配，你是否要搜索以下词语：<ul>";
-        fuzzyResults.forEach(res => {
-          suggestionHtml += `<li onclick="document.getElementById('input-word').value='${res.item.translation}'; document.getElementById('dictForm').dispatchEvent(new Event('submit'));">${res.item.translation} (${res.item.word})</li>`;
-        });
-        suggestionHtml += "</ul>";
-        resultDiv.innerHTML = suggestionHtml;
-        return;
-      }
-    }
-  }
 
-  // 渲染结果：显示帕劳语词条（加粗）、中文释义、词性、释义和示例
-  if (resultList.length === 0) {
-    resultDiv.innerHTML = "未找到翻译结果";
-  } else {
-    let output = "";
-    resultList.forEach(item => {
-      output += `
-        <div style="margin:10px 0;">
-          <span style="color: rgb(19, 0, 102); font-size: 20px;"><b>${item.word}</b></span><br>
-          <b>中文释义：</b> ${item.translation}<br>
-          <b>词性：</b> ${item.type || "无"}<br>
-          <b>释义：</b> ${item.definition || "暂无释义"}<br>
-          <b>示例：</b> ${item.example || "暂无示例"}
-        </div>
-      `;
-    });
-    resultDiv.innerHTML = output;
-  }
+    // **尝试精确匹配**
+    let resultList = dictionaryArray.filter(item =>
+        normalize(item.word) === inputWord || normalize(item.translation) === inputWord
+    );
+
+    // **若精确匹配失败，进行模糊搜索**
+    if (resultList.length === 0) {
+        const fuzzyResults = fuse.search(inputWord);
+        if (fuzzyResults.length > 0) {
+            resultList = fuzzyResults.map(res => res.item);
+        }
+    }
+
+    // **渲染结果**
+    if (resultList.length === 0) {
+        resultDiv.innerHTML = "未找到翻译结果";
+    } else {
+        resultDiv.innerHTML = resultList.map(item => `
+            <div style="margin:10px 0;">
+                <span style="color: rgb(19, 0, 102); font-size: 20px; margin-up:20px;"><b>${item.word}</b></span><br>
+                <b>中文释义：</b> ${item.translation}<br>
+                <b>词性：</b> ${item.type || "无"}<br>
+                <b>释义：</b> ${item.definition || "暂无释义"}<br>
+                <b>示例：</b> ${item.example || item.examples?.join('<br>') || "暂无示例"}
+            </div>
+        `).join('');
+    }
 });
 </script>
-</body>
-</html>
