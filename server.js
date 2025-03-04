@@ -7,6 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+// ✅ 监听端口
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 服务器运行在端口 ${PORT}`);
+});
+
 // ✅ 输出环境变量，检查是否正确加载
 console.log('📌 MySQL 配置信息:');
 console.log('MYSQLHOST:', process.env.MYSQLHOST || '127.0.0.1');
@@ -14,6 +21,11 @@ console.log('MYSQLUSER:', process.env.MYSQLUSER || 'root');
 console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD || '未设置');
 console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE || '未设置');
 console.log('PORT:', process.env.PORT || 3000);
+
+const dbUrl = process.env.DATABASE_URL;
+console.log('📌 MySQL 连接 URL:', dbUrl);
+
+const db = mysql.createConnection(dbUrl);
 
 // ✅ 连接 Railway MySQL 数据库
 console.log("📌 MySQL 连接信息:");
