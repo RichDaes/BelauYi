@@ -68,6 +68,8 @@ app.get('/search', (req, res) => {
 });
 
 // 启动服务器
-app.listen(3000, () => {
-    console.log('🚀 服务器运行在 http://localhost:3000');
+const PORT = process.env.PORT || 3000; // 使用 Railway 提供的端口
+app.listen(PORT, () => {
+    console.log(`🚀 服务器运行在端口 ${PORT}`);
 });
+
