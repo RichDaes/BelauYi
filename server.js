@@ -7,11 +7,16 @@ app.use(cors());
 app.use(express.json());
 
 // 连接 MySQL 数据库
+const mysql = require('mysql2');
+require('dotenv').config(); // 确保支持环境变量
+
+// 连接 Railway MySQL
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',  // 你的 MySQL 用户名
-    password: '111111',  // 你的 MySQL 密码（如果没有密码，保持为空字符串）
-    database: '字典' // 你的数据库名称，确保数据库已存在！
+    host: process.env.MYSQLHOST,  
+    user: 'root',  // Railway 使用 root 用户
+    password: process.env.MYSQLPASSWORD,  
+    database: process.env.MYSQLDATABASE,  
+    port: 3306  // Railway 默认 MySQL 端口
 });
 
 db.connect(err => {
@@ -19,8 +24,9 @@ db.connect(err => {
         console.error('❌ MySQL 连接失败:', err);
         return;
     }
-    console.log('✅ MySQL 连接成功');
+    console.log('✅ 成功连接到 Railway MySQL 数据库');
 });
+
 
 // 查询 API
 app.get('/search', (req, res) => {
