@@ -7,13 +7,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-console.log("📌 MySQL 连接信息:");
-console.log("MYSQLHOST:", process.env.MYSQLHOST || process.env.RAILWAY_PRIVATE_DOMAIN);
-console.log("MYSQLUSER:", process.env.MYSQLUSER);
-console.log("MYSQLPASSWORD:", process.env.MYSQLPASSWORD ? "✅ (已设置)" : "❌ (未设置)");
-console.log("MYSQLDATABASE:", process.env.MYSQLDATABASE);
-console.log("PORT:", process.env.PORT || 3306);
-
 // ✅ 输出环境变量，检查是否正确加载
 console.log('📌 MySQL 配置信息:');
 console.log('MYSQLHOST:', process.env.MYSQLHOST || '127.0.0.1');
@@ -23,13 +16,19 @@ console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE || '未设置');
 console.log('PORT:', process.env.PORT || 3000);
 
 // ✅ 连接 Railway MySQL 数据库
+console.log("📌 MySQL 连接信息:");
+console.log("MYSQLHOST:", process.env.MYSQLHOST || "未设置");
+console.log("MYSQLUSER:", process.env.MYSQLUSER || "未设置");
+console.log("MYSQLPASSWORD:", process.env.MYSQLPASSWORD ? "✅ (已设置)" : "❌ (未设置)");
+console.log("MYSQLDATABASE:", process.env.MYSQLDATABASE || "未设置");
+console.log("PORT:", process.env.PORT || 3306);
+
 const db = mysql.createConnection({
-    host: process.env.MYSQLHOST || process.env.localhost,
-    user: process.env.MYSQLUSER || 'root',  // Railway MySQL 默认 root 用户
-    password: process.env.MYSQLPASSWORD,  
-    database: process.env.MYSQLDATABASE,  
-    port: 3306, // MySQL 固定端口，不要用 process.env.PORT
-    connectTimeout: 20000, // 增加超时，避免 ETIMEDOUT
+    host: process.env.MYSQLHOST || "belauyi.railway.internal",
+    user: process.env.MYSQLUSER || "root",
+    password: process.env.MYSQLPASSWORD || "你的数据库密码",
+    database: process.env.MYSQLDATABASE || "你的数据库名称",
+    port: 3306
 });
 
 db.connect(err => {
