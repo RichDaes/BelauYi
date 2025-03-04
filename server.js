@@ -68,8 +68,9 @@ app.get('/search', (req, res) => {
 });
 
 // ✅ 监听 Railway 提供的端口
-const PORT = 3000; // 确保和 Railway 端口匹配
+const PORT = process.env.PORT || 3000; // Railway 自动分配端口
 app.listen(PORT, () => {
     console.log(`🚀 服务器运行在端口 ${PORT}`);
 });
+
 
