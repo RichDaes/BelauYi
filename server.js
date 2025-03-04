@@ -7,6 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+console.log("📌 MySQL 连接信息:");
+console.log("MYSQLHOST:", process.env.MYSQLHOST || process.env.RAILWAY_PRIVATE_DOMAIN);
+console.log("MYSQLUSER:", process.env.MYSQLUSER);
+console.log("MYSQLPASSWORD:", process.env.MYSQLPASSWORD ? "✅ (已设置)" : "❌ (未设置)");
+console.log("MYSQLDATABASE:", process.env.MYSQLDATABASE);
+console.log("PORT:", process.env.PORT || 3306);
+
 // ✅ 输出环境变量，检查是否正确加载
 console.log('📌 MySQL 配置信息:');
 console.log('MYSQLHOST:', process.env.MYSQLHOST || '127.0.0.1');
