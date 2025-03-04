@@ -25,8 +25,8 @@ console.log("PORT:", process.env.PORT || 3306);
 
 const db = mysql.createConnection({
     host: process.env.MYSQLHOST || "belauyi.railway.internal",
-    user: process.env.MYSQLUSER || "root",
-    password: process.env.MYSQLPASSWORD || "111111",
+    user: process.env.MYSQLUSER || "localuser",
+    password: process.env.MYSQLPASSWORD || 111111,
     database: process.env.MYSQLDATABASE || "字典",
     port: 3306
 });
