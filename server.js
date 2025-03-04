@@ -9,7 +9,7 @@ app.use(express.json());
 
 // ✅ 输出环境变量，检查是否正确加载
 console.log('📌 MySQL 配置信息:');
-console.log('MYSQLHOST:', process.env.MYSQLHOST || process.env.RAILWAY_PRIVATE_DOMAIN);
+console.log('MYSQLHOST:', process.env.MYSQLHOST || "localhost");
 console.log('MYSQLUSER:', process.env.MYSQLUSER || 'root');
 console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD || '未设置');
 console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE || '未设置');
