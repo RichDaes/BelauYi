@@ -10,17 +10,19 @@ app.use(express.json());
 // ✅ 输出环境变量，检查是否正确加载
 console.log('📌 MySQL 配置信息:');
 console.log('MYSQLHOST:', process.env.MYSQLHOST || process.env.RAILWAY_PRIVATE_DOMAIN);
-console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD||111111);
-console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE||"字典");
-console.log('PORT:', process.env.PORT||3306);
+console.log('MYSQLUSER:', process.env.MYSQLUSER || 'root');
+console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD || '未设置');
+console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE || '未设置');
+console.log('PORT:', process.env.PORT || 3000);
 
 // ✅ 连接 Railway MySQL 数据库
 const db = mysql.createConnection({
-    host: process.env.MYSQLHOST,  
-    user: process.env.MYSQLUSER,  // Railway MySQL 用户
+    host: process.env.MYSQLHOST || process.env.RAILWAY_PRIVATE_DOMAIN,
+    user: process.env.MYSQLUSER || 'root',  // Railway MySQL 默认 root 用户
     password: process.env.MYSQLPASSWORD,  
     database: process.env.MYSQLDATABASE,  
-    port: process.env.PORT || 3306  // Railway 默认 MySQL 端口
+    port: 3306, // MySQL 固定端口，不要用 process.env.PORT
+    connectTimeout: 20000, // 增加超时，避免 ETIMEDOUT
 });
 
 db.connect(err => {
