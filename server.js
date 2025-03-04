@@ -24,7 +24,7 @@ console.log('PORT:', process.env.PORT || 3000);
 
 // ✅ 连接 Railway MySQL 数据库
 const db = mysql.createConnection({
-    host: process.env.MYSQLHOST || process.env.RAILWAY_PRIVATE_DOMAIN,
+    host: process.env.MYSQLHOST || process.env.localhost,
     user: process.env.MYSQLUSER || 'root',  // Railway MySQL 默认 root 用户
     password: process.env.MYSQLPASSWORD,  
     database: process.env.MYSQLDATABASE,  
