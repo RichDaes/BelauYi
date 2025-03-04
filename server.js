@@ -1,19 +1,27 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
-require('dotenv').config(); // 让 Node.js 读取环境变量
+require('dotenv').config(); // 加载 .env 文件
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ✅ 输出环境变量，检查是否正确加载
+console.log('📌 MySQL 配置信息:');
+console.log('MYSQLHOST:', process.env.MYSQLHOST);
+console.log('MYSQLUSER:', process.env.MYSQLUSER);
+console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD);
+console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE);
+console.log('PORT:', process.env.PORT);
+
 // ✅ 连接 Railway MySQL 数据库
 const db = mysql.createConnection({
     host: process.env.MYSQLHOST,  
-    user: 'root',  // Railway 默认 root 用户
+    user: process.env.MYSQLUSER,  // Railway MySQL 用户
     password: process.env.MYSQLPASSWORD,  
     database: process.env.MYSQLDATABASE,  
-    port: 3306  // Railway 默认 MySQL 端口
+    port: process.env.PORT || 3306  // Railway 默认 MySQL 端口
 });
 
 db.connect(err => {
@@ -72,5 +80,3 @@ const PORT = process.env.PORT || 3000; // Railway 自动分配端口
 app.listen(PORT, () => {
     console.log(`🚀 服务器运行在端口 ${PORT}`);
 });
-
-
