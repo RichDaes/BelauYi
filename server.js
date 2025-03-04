@@ -10,7 +10,7 @@ app.use(express.json());
 // ✅ 输出环境变量，检查是否正确加载
 console.log('📌 MySQL 配置信息:');
 console.log('MYSQLHOST:', process.env.MYSQLHOST||mysql);
-console.log('MYSQLUSER:', process.env.MYSQLUSER||root);
+console.log('MYSQLUSER:', process.env.MYSQLUSER||"root");
 console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD||111111);
 console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE||词典);
 console.log('PORT:', process.env.PORT||3306);
