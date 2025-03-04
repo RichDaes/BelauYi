@@ -22,11 +22,6 @@ console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD || '未设置');
 console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE || '未设置');
 console.log('PORT:', process.env.PORT || 3000);
 
-const dbUrl = process.env.DATABASE_URL;
-console.log('📌 MySQL 连接 URL:', dbUrl);
-
-const db = mysql.createConnection(dbUrl);
-
 // ✅ 连接 Railway MySQL 数据库
 console.log("📌 MySQL 连接信息:");
 console.log("MYSQLHOST:", process.env.MYSQLHOST || "未设置");
