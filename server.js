@@ -7,35 +7,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
-// ✅ 监听端口
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 服务器运行在端口 ${PORT}`);
-});
-
-// ✅ 输出环境变量，检查是否正确加载
-console.log('📌 MySQL 配置信息:');
-console.log('MYSQLHOST:', process.env.MYSQLHOST || '127.0.0.1');
-console.log('MYSQLUSER:', process.env.MYSQLUSER || 'root');
-console.log('MYSQLPASSWORD:', process.env.MYSQLPASSWORD || '未设置');
-console.log('MYSQLDATABASE:', process.env.MYSQLDATABASE || '未设置');
-console.log('PORT:', process.env.PORT || 3000);
-
-// ✅ 连接 Railway MySQL 数据库
-console.log("📌 MySQL 连接信息:");
-console.log("MYSQLHOST:", process.env.MYSQLHOST || "未设置");
-console.log("MYSQLUSER:", process.env.MYSQLUSER || "未设置");
-console.log("MYSQLPASSWORD:", process.env.MYSQLPASSWORD ? "✅ (已设置)" : "❌ (未设置)");
-console.log("MYSQLDATABASE:", process.env.MYSQLDATABASE || "未设置");
-console.log("PORT:", process.env.PORT || 3306);
-
 const db = mysql.createConnection({
-    host: process.env.MYSQLHOST || "belauyi.railway.internal",
-    user: process.env.MYSQLUSER || "localuser",
-    password: process.env.MYSQLPASSWORD || 111111,
-    database: process.env.MYSQLDATABASE || "字典",
-    port: 3306
+    host: "localhost",  // cPanel 一般使用 localhost
+    user: "blgpqgeftrnjvskg_RichDas",
+    password: "Tonghuikeyi1",
+    database: "blgpqgeftrnjvskg_BelauYi"
 });
 
 db.connect(err => {
@@ -43,7 +19,7 @@ db.connect(err => {
         console.error('❌ MySQL 连接失败:', err);
         return;
     }
-    console.log('✅ 成功连接到 Railway MySQL 数据库');
+    console.log('✅ 成功连接到 cPanel MySQL 数据库');
 });
 
 // ✅ 默认路由，测试 API 是否运行
