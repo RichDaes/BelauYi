@@ -9,11 +9,11 @@ app.use(express.json());
 
 // 使用环境变量存储数据库信息，避免泄露
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3000,
+  host: "database-1.cfa2gw8uums4.us-east-2.rds.amazonaws.com",
+  user: "admin",
+  password: "tonghuikeyi",
+  database: "dictionary",
+  port: 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
