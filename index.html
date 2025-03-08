@@ -123,11 +123,11 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
   const resultDiv = document.getElementById("result");
 
   if (!inputWord) {
-    resultDiv.innerHTML = "<p style='color: red;'>请输入要翻译的词汇！</p >";
+    resultDiv.innerHTML = "<p style='color: red;'>请输入要翻译的词汇！</p>";
     return;
   }
 
-  resultDiv.innerHTML = "<p style='color: gray;'>查询中...</p >"; // 显示加载状态
+  resultDiv.innerHTML = "<p style='color: gray;'>查询中...</p>"; // 显示加载状态
 
   try {
     const response = await fetch(`${apiBaseUrl}/search?word=${encodeURIComponent(inputWord)}`, {
@@ -143,12 +143,22 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
 
     const data = await response.json();
 
-    resultDiv.innerHTML = data.length > 0
-      ? data.map(item => `<div><b>${item.word}</b>: ${item.translation}</div>`).join("")
-      : "<p>未找到翻译结果</p >";
+    if (data.length > 0) {
+      resultDiv.innerHTML = data.map(item => `
+        <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+          <span style="color: rgb(19, 0, 102); font-size: 20px;"><b>${item.word}</b></span><br>
+          <b>翻译：</b> ${item.translation || "暂无翻译"}<br>
+          <b>词性：</b> ${item.parts_of_speech || "无"}<br>
+          <b>示例：</b> ${item.example || "暂无示例"}<br>
+        </div>
+      `).join("");
+    } else {
+      resultDiv.innerHTML = "<p>未找到翻译结果</p>";
+    }
+
   } catch (error) {
     console.error("查询错误:", error);
-    resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p >";
+    resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
   }
 });
 </script>
