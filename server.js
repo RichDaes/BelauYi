@@ -1,33 +1,35 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
-require('dotenv').config(); // 加载 .env 文件
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const db = mysql.createConnection({
-    host: "localhost",  // cPanel 一般使用 localhost
-    user: "blgpqgeftrnjvskg_RichDas",
-    password: "Tonghuikeyi1",
-    database: "blgpqgeftrnjvskg_BelauYi"
+    host: "sql12.freesqldatabase.com",
+    user: "sql12766065",
+    password: "DwMuHYlhHR",
+    database: "sql12766065",
+    port: 3306
 });
 
+// ✅ 连接数据库
 db.connect(err => {
     if (err) {
         console.error('❌ MySQL 连接失败:', err);
         return;
     }
-    console.log('✅ 成功连接到 cPanel MySQL 数据库');
+    console.log('✅ 成功连接到 MySQL 远程数据库');
 });
 
-// ✅ 默认路由，测试 API 是否运行
+// ✅ 测试 API 是否正常运行
 app.get('/', (req, res) => {
     res.send('🚀 API is running!');
 });
 
-// ✅ 查询词典 API
+// ✅ 词典查询 API
 app.get('/search', (req, res) => {
     const query = req.query.word;
     if (!query) {
@@ -36,8 +38,8 @@ app.get('/search', (req, res) => {
 
     console.log(`🔍 正在查询: ${query}`);
 
-    // **精确匹配**
-    const sql = `SELECT * FROM dictionary WHERE word = ? OR translation = ?`;
+    const sql = `SELECT * FROM \`中译帕字典\` WHERE word = ? OR translation = ?`;
+
     db.query(sql, [query, query], (err, results) => {
         if (err) {
             console.error('❌ 数据库查询错误:', err);
@@ -47,7 +49,6 @@ app.get('/search', (req, res) => {
         if (results.length > 0) {
             return res.json(results);
         } else {
-            // **模糊匹配**
             const fuzzySql = `SELECT * FROM dictionary WHERE word LIKE ? OR translation LIKE ? LIMIT 5`;
             db.query(fuzzySql, [`%${query}%`, `%${query}%`], (err, fuzzyResults) => {
                 if (err) {
@@ -65,8 +66,8 @@ app.get('/search', (req, res) => {
     });
 });
 
-// ✅ 监听 Railway 提供的端口
-const PORT = process.env.PORT || 3000; // Railway 自动分配端口
+// ✅ 监听端口
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 服务器运行在端口 ${PORT}`);
 });
