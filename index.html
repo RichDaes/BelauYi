@@ -112,47 +112,44 @@
     <a href="#" target="_blank">Disclaimer</a> | 联系电话: (680) 770 - 2868
 </div>
 
-<script>
-document.getElementById('dictForm').addEventListener('submit', async function(event) {
-    event.preventDefault();
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+  <script>
+const apiBaseUrl = "https://belauyi.onrender.com"; // 替换成你的后端 API 地址
 
-    const inputWord = document.getElementById('input-word').value.trim();
-    const resultDiv = document.getElementById('result');
+document.getElementById("dictForm").addEventListener("submit", async function (event) {
+  event.preventDefault();
+  
+  const inputWord = document.getElementById("input-word").value.trim();
+  const resultDiv = document.getElementById("result");
 
-    if (!inputWord) {
-        resultDiv.innerHTML = "<p style='color: red;'>请输入要翻译的词汇！</p>";
-        return;
+  if (!inputWord) {
+    resultDiv.innerHTML = "<p style='color: red;'>请输入要翻译的词汇！</p >";
+    return;
+  }
+
+  resultDiv.innerHTML = "<p style='color: gray;'>查询中...</p >"; // 显示加载状态
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/search?word=${encodeURIComponent(inputWord)}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("查询失败，服务器返回错误");
     }
 
-    try {
-        // 发送请求到后端 API
-        const response = await fetch(`http://localhost:3000/search?word=${encodeURIComponent(inputWord)}`);
-        const data = await response.json();
+    const data = await response.json();
 
-        // 处理返回结果
-        if (data.length > 0) {
-            resultDiv.innerHTML = data.map(item => `
-                <div style="margin:10px 0;">
-                    <span style="color: rgb(19, 0, 102); font-size: 20px; margin-up:20px;"><b>${item.word}</b></span><br>
-                    <b>中文释义：</b> ${item.translation}<br>
-                    <b>词性：</b> ${item.parts_of_speech || "无"}<br>
-                    <b>示例：</b> ${item.example || "暂无示例"}
-                </div>
-            `).join('');
-        } else if (data.suggestions && data.suggestions.length > 0) {
-            let suggestionHtml = "<p>未找到精确匹配，是否要查询以下词语？</p><ul>";
-            data.suggestions.forEach(item => {
-                suggestionHtml += `<li onclick="document.getElementById('input-word').value='${item.word}'; document.getElementById('dictForm').dispatchEvent(new Event('submit'));">${item.word} (${item.translation})</li>`;
-            });
-            suggestionHtml += "</ul>";
-            resultDiv.innerHTML = suggestionHtml;
-        } else {
-            resultDiv.innerHTML = "<p>未找到翻译结果</p>";
-        }
-    } catch (error) {
-        resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
-        console.error("请求错误：", error);
-    }
+    resultDiv.innerHTML = data.length > 0
+      ? data.map(item => `<div><b>${item.word}</b>: ${item.translation}</div>`).join("")
+      : "<p>未找到翻译结果</p >";
+  } catch (error) {
+    console.error("查询错误:", error);
+    resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p >";
+  }
 });
 </script>
 </body>
