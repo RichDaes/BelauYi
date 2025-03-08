@@ -147,9 +147,9 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
       resultDiv.innerHTML = data.map(item => `
         <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
           <span style="color: rgb(19, 0, 102); font-size: 20px;"><b>${item.word}</b></span><br>
-          <b>翻译：</b> ${item.translation || "暂无翻译"}<br>
+          <b>中文释义：</b> ${item.translation || "暂无翻译"}<br>
           <b>词性：</b> ${item.parts_of_speech || "无"}<br>
-          <b>示例：</b> ${item.example || "暂无示例"}<br>
+          <b>示例：</b> ${item.example || "暂无示例"}
         </div>
       `).join("");
     } else {
@@ -161,6 +161,7 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
     resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
   }
 });
+
 </script>
 </body>
 </html>
