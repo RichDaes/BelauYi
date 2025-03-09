@@ -112,76 +112,94 @@
     <a href="#" target="_blank">Disclaimer</a> | 联系电话: (680) 770 - 2868
 </div>
 
- # 前端 JavaScript 代码（查询 API 并显示翻译结果）
-
-```html
 <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
 <script>
 
-const apiBaseUrl = "https://belauyi.onrender.com"; // 替换成你的后端 API 地址
+const express = require("express");
+const mysql = require("mysql2/promise");
+const cors = require("cors");
+require("dotenv").config();
 
-document.getElementById("dictForm").addEventListener("submit", async function (event) {
-  event.preventDefault();
-  
-  const inputWord = document.getElementById("input-word").value.trim();
-  const resultDiv = document.getElementById("result");
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-  if (!inputWord) {
-    resultDiv.innerHTML = "<p style='color: red;'>请输入要翻译的词汇！</p>";
-    return;
+const pool = mysql.createPool({
+  host: "database-1.cfa2gw8uums4.us-east-2.rds.amazonaws.com",
+  user: "admin",
+  password: "tonghuikeyi",
+  database: "dictionary",
+  port: 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+app.get("/", (req, res) => {
+  res.send("🚀 API is running and connected to MySQL!");
+});
+
+app.get("/search", async (req, res) => {
+  const query = req.query.word;
+  if (!query) {
+    return res.status(400).json({ message: "请输入要查询的词汇" });
   }
 
-  resultDiv.innerHTML = "<p style='color: gray;'>查询中...</p>"; // 显示加载状态
+  console.log(`🔍 查询词汇: ${query}`);
 
   try {
-    const response = await fetch(`${apiBaseUrl}/search?word=${encodeURIComponent(inputWord)}`);
+    // **1️⃣ 精确匹配**
+    const [exactResults] = await pool.query(
+      "SELECT * FROM `cn-pw_dictionary` WHERE word = ? OR translation = ?",
+      [query, query]
+    );
+
+    if (exactResults.length > 0) {
+      return res.json(exactResults);
+    }
+
+    console.log("⚠️ 没有找到精确匹配，进行模糊搜索...");
+
+    // **2️⃣ 高级模糊搜索**
+    const [fuzzyResults] = await pool.query(
+      `SELECT * FROM \`cn-pw_dictionary\` 
+       WHERE word LIKE ? OR translation LIKE ? 
+       ORDER BY CHAR_LENGTH(word) ASC 
+       LIMIT 5`,
+      [`%${query}%`, `%${query}%`]
+    );
+
+    if (fuzzyResults.length > 0) {
+      return res.json({ suggestions: fuzzyResults });
+    }
+
+    console.log("❌ 没有找到相关结果，提供推荐词...");
     
-    if (!response.ok) {
-      throw new Error("查询失败，服务器返回错误");
+    // **3️⃣ 推荐相似的单词**
+    const [recommendedResults] = await pool.query(
+      `SELECT word, translation FROM \`cn-pw_dictionary\` 
+       WHERE word REGEXP ? OR translation REGEXP ? 
+       ORDER BY CHAR_LENGTH(word) ASC 
+       LIMIT 5`,
+      [`${query[0]}`, `${query[0]}`] // 仅匹配第一个字符（可调整）
+    );
+
+    if (recommendedResults.length > 0) {
+      return res.json({ message: "未找到翻译结果", recommendations: recommendedResults });
     }
 
-    const data = await response.json();
-    console.log("🔍 API 返回数据:", data); // 确保 API 真的返回数据
-    let output = "";
+    return res.json({ message: "未找到翻译结果，也没有推荐词" });
 
-    // ✅ 处理精准匹配数据
-    if (data.exactMatches && data.exactMatches.length > 0) {
-      output += "<p><b>精准匹配：</b></p>";
-      output += data.exactMatches.map(item => `
-        <div>
-          <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
-          <b>词性：</b> ${item.type || "无"}<br>
-          <b>释义：</b> ${item.definition || "暂无释义"}<br>
-          <b>示例：</b> ${item.example || "暂无示例"}
-        </div>
-      `).join("");
-    }
-
-    // ✅ **确保 `suggestions` 也被正确解析**
-    if (data.suggestions && data.suggestions.length > 0) {
-      output += "<p><b>相似匹配：</b></p>";
-      output += data.suggestions.map(item => `
-        <div>
-          <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
-          <b>词性：</b> ${item.type || "无"}<br>
-          <b>释义：</b> ${item.definition || "暂无释义"}<br>
-          <b>示例：</b> ${item.example || "暂无示例"}
-        </div>
-      `).join("");
-    }
-
-    // **如果 `exactMatches` 和 `suggestions` 都为空，才显示“未找到”**
-    if (!output) {
-      output = "<p>未找到翻译结果</p>";
-    }
-
-    resultDiv.innerHTML = output;
-  } catch (error) {
-    console.error("🚨 API 请求错误:", error);
-    resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
+  } catch (err) {
+    console.error("❌ 数据库查询错误:", err.message);
+    return res.status(500).json({ message: "数据库查询失败" });
   }
 });
 
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 服务器运行在端口 ${PORT}`);
+});
 
 </script>
 
