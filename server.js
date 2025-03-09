@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
   res.send("🚀 API is running and connected to MySQL!");
 });
 
-// ✅ **修改后的 `/search` 逻辑**
+// ✅ 修改 `/search`，提供多个选择
 app.get("/search", async (req, res) => {
   const query = req.query.word;
   if (!query) {
@@ -33,18 +33,15 @@ app.get("/search", async (req, res) => {
   console.log(`🔍 查询词汇: ${query}`);
 
   try {
-    // **1️⃣ 先尝试精确匹配**
-    const [exactMatch] = await pool.query(
-      "SELECT translation FROM `cn-pw_dictionary` WHERE word = ?",
+    // **1️⃣ 查找数据库中是否有完全匹配的单词**
+    const [exactMatches] = await pool.query(
+      "SELECT word, translation FROM `cn-pw_dictionary` WHERE word = ?",
       [query]
     );
 
-    if (exactMatch.length > 0) {
-      return res.json([{ word: query, translation: exactMatch[0].translation }]);
-    }
-
-    // **2️⃣ 如果没有精确匹配，执行 Levenshtein 近似匹配**
+    // **2️⃣ 获取所有单词进行近似匹配**
     const [allWords] = await pool.query("SELECT word, translation FROM `cn-pw_dictionary`");
+
     let bestMatches = [];
     let minDistance = Infinity;
 
@@ -58,12 +55,11 @@ app.get("/search", async (req, res) => {
       }
     });
 
-    if (bestMatches.length > 0 && minDistance <= 2) { // 允许最多 2 个字符的拼写错误
-      return res.json(bestMatches);
-    }
-
-    return res.json([]);
-
+    // **3️⃣ 返回所有匹配的结果，让前端选择**
+    return res.json({
+      exactMatches,
+      suggestions: bestMatches.length > 0 && minDistance <= 2 ? bestMatches : []
+    });
   } catch (err) {
     console.error("❌ 数据库查询错误:", err.message);
     return res.status(500).json({ message: "数据库查询失败" });
