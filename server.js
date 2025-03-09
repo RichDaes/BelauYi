@@ -7,7 +7,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 使用环境变量存储数据库信息，避免泄露
 const pool = mysql.createPool({
   host: "database-1.cfa2gw8uums4.us-east-2.rds.amazonaws.com",
   user: "admin",
@@ -32,26 +31,48 @@ app.get("/search", async (req, res) => {
   console.log(`🔍 查询词汇: ${query}`);
 
   try {
-    const [results] = await pool.query(
+    // **1️⃣ 精确匹配**
+    const [exactResults] = await pool.query(
       "SELECT * FROM `cn-pw_dictionary` WHERE word = ? OR translation = ?",
       [query, query]
     );
 
-    if (results.length > 0) {
-      return res.json(results);
-    } else {
-      console.log("⚠️ 没有找到精确匹配，进行模糊搜索...");
-      const [fuzzyResults] = await pool.query(
-        "SELECT * FROM `cn-pw_dictionary` WHERE word LIKE ? OR translation LIKE ? LIMIT 5",
-        [`%${query}%`, `%${query}%`]
-      );
-
-      if (fuzzyResults.length > 0) {
-        return res.json({ suggestions: fuzzyResults });
-      } else {
-        return res.json({ message: "未找到翻译结果" });
-      }
+    if (exactResults.length > 0) {
+      return res.json(exactResults);
     }
+
+    console.log("⚠️ 没有找到精确匹配，进行模糊搜索...");
+
+    // **2️⃣ 高级模糊搜索**
+    const [fuzzyResults] = await pool.query(
+      `SELECT * FROM \`cn-pw_dictionary\` 
+       WHERE word LIKE ? OR translation LIKE ? 
+       ORDER BY CHAR_LENGTH(word) ASC 
+       LIMIT 5`,
+      [`%${query}%`, `%${query}%`]
+    );
+
+    if (fuzzyResults.length > 0) {
+      return res.json({ suggestions: fuzzyResults });
+    }
+
+    console.log("❌ 没有找到相关结果，提供推荐词...");
+    
+    // **3️⃣ 推荐相似的单词**
+    const [recommendedResults] = await pool.query(
+      `SELECT word, translation FROM \`cn-pw_dictionary\` 
+       WHERE word REGEXP ? OR translation REGEXP ? 
+       ORDER BY CHAR_LENGTH(word) ASC 
+       LIMIT 5`,
+      [`${query[0]}`, `${query[0]}`] // 仅匹配第一个字符（可调整）
+    );
+
+    if (recommendedResults.length > 0) {
+      return res.json({ message: "未找到翻译结果", recommendations: recommendedResults });
+    }
+
+    return res.json({ message: "未找到翻译结果，也没有推荐词" });
+
   } catch (err) {
     console.error("❌ 数据库查询错误:", err.message);
     return res.status(500).json({ message: "数据库查询失败" });
