@@ -1,7 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
-const levenshtein = require("fast-levenshtein");
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
@@ -30,43 +30,52 @@ app.get("/search", async (req, res) => {
 
   console.log(`🔍 查询词汇: ${query}`);
 
-  let connection;
   try {
-    connection = await pool.getConnection();
-    
-    const [exactMatches] = await connection.query(
-      "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary` WHERE word = ?",
-      [query]
+    // **1️⃣ 精确匹配**
+    const [exactResults] = await pool.query(
+      "SELECT * FROM `cn-pw_dictionary` WHERE word = ? OR translation = ?",
+      [query, query]
     );
 
-    console.log("🔍 数据库查询结果（精准匹配）:", exactMatches);
+    if (exactResults.length > 0) {
+      return res.json(exactResults);
+    }
 
-    const [allWords] = await connection.query("SELECT word, translation, type, definition, example FROM `cn-pw_dictionary`");
+    console.log("⚠️ 没有找到精确匹配，进行模糊搜索...");
 
-    let bestMatches = [];
-    let minDistance = Infinity;
+    // **2️⃣ 高级模糊搜索**
+    const [fuzzyResults] = await pool.query(
+      `SELECT * FROM \`cn-pw_dictionary\` 
+       WHERE word LIKE ? OR translation LIKE ? 
+       ORDER BY CHAR_LENGTH(word) ASC 
+       LIMIT 5`,
+      [`%${query}%`, `%${query}%`]
+    );
 
-    allWords.forEach((row) => {
-      const distance = levenshtein.get(query, row.word);
-      if (distance < minDistance) {
-        minDistance = distance;
-        bestMatches = [row];
-      } else if (distance === minDistance) {
-        bestMatches.push(row);
-      }
-    });
+    if (fuzzyResults.length > 0) {
+      return res.json({ suggestions: fuzzyResults });
+    }
 
-    console.log("🔍 数据库查询结果（近似匹配）:", bestMatches);
+    console.log("❌ 没有找到相关结果，提供推荐词...");
+    
+    // **3️⃣ 推荐相似的单词**
+    const [recommendedResults] = await pool.query(
+      `SELECT word, translation FROM \`cn-pw_dictionary\` 
+       WHERE word REGEXP ? OR translation REGEXP ? 
+       ORDER BY CHAR_LENGTH(word) ASC 
+       LIMIT 5`,
+      [`${query[0]}`, `${query[0]}`] // 仅匹配第一个字符（可调整）
+    );
 
-    res.json({
-      exactMatches: exactMatches.length > 0 ? exactMatches : [],
-      suggestions: bestMatches.length > 0 && minDistance <= 3 ? bestMatches : []
-    });
+    if (recommendedResults.length > 0) {
+      return res.json({ message: "未找到翻译结果", recommendations: recommendedResults });
+    }
+
+    return res.json({ message: "未找到翻译结果，也没有推荐词" });
+
   } catch (err) {
     console.error("❌ 数据库查询错误:", err.message);
-    res.status(500).json({ message: "数据库查询失败" });
-  } finally {
-    if (connection) connection.release();
+    return res.status(500).json({ message: "数据库查询失败" });
   }
 });
 
