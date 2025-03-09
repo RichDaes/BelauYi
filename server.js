@@ -48,7 +48,7 @@ app.get("/search", async (req, res) => {
       `SELECT word, translation, type, definition, example FROM \`cn-pw_dictionary\` 
        WHERE word LIKE ? OR translation LIKE ? 
        ORDER BY CHAR_LENGTH(word) ASC 
-       LIMIT 5`,
+       LIMIT 1000`,
       [`%${query}%`, `%${query}%`]
     );
 
