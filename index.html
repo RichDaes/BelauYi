@@ -126,24 +126,21 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
 
     resultDiv.innerHTML = "<p>查询中...</p>";
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-
-        const response = await fetch(`${API_BASE}/search?word=${encodeURIComponent(inputWord)}`, {
-            signal: controller.signal
-        }).catch(error => {
-            if (error.name === "AbortError") {
-                resultDiv.innerHTML = "<p style='color: red;'>查询超时，请稍后重试</p>";
-            }
-            throw error;
-        });
-
-        clearTimeout(timeout);
+        const response = await fetch(`${API_BASE}/search?word=${encodeURIComponent(inputWord)}`);
         if (!response.ok) throw new Error("查询失败");
 
         const data = await response.json();
         let output = "";
 
+        // **1️⃣ Auto-Correction Suggestion**
+        if (data.correctedWord) {
+            output += `<p style='color: orange;'><b>你是否想输入: 
+                      <span style="cursor: pointer; color: blue; text-decoration: underline;"
+                      onclick="document.getElementById('input-word').value='${data.correctedWord}'; document.querySelector('form').dispatchEvent(new Event('submit'));">
+                      ${data.correctedWord}</span>？</b></p>`;
+        }
+
+        // **2️⃣ Show Exact Matches**
         if (data.exactMatches && data.exactMatches.length > 0) {
             output += `<p><b>精准匹配：</b></p>`;
             output += data.exactMatches.map(item => `
@@ -156,6 +153,7 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
             `).join("");
         }
 
+        // **3️⃣ Show Similar Matches**
         if (data.suggestions && data.suggestions.length > 0) {
             output += `<p><b>相似匹配：</b></p><ul>`;
             output += data.suggestions.map(item => `
@@ -181,7 +179,6 @@ document.getElementById("input-word").addEventListener("keydown", function(event
         document.getElementById("search-btn").click();
     }
 });
-
 </script>
 
 </body>
