@@ -38,12 +38,12 @@ app.get("/search", async (req, res) => {
 
     // **1️⃣ 查找数据库中是否有完全匹配的单词**
     const [exactMatches] = await connection.query(
-      "SELECT * FROM `cn-pw_dictionary` WHERE word = ?",
+      "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary` WHERE word = ?",
       [query]
     );
 
     // **2️⃣ 获取所有单词进行近似匹配**
-    const [allWords] = await connection.query("SELECT * FROM `cn-pw_dictionary`");
+    const [allWords] = await connection.query("SELECT word, translation, type, definition, example FROM `cn-pw_dictionary`");
 
     let bestMatches = [];
     let minDistance = Infinity;
