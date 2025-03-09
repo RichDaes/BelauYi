@@ -43,13 +43,30 @@ app.get("/search", async (req, res) => {
 
     console.log("⚠️ 没有找到精确匹配，进行模糊搜索...");
 
-    // **2️⃣ 高级模糊搜索**
+    // **2️⃣ 尝试 FULLTEXT 搜索**
+    try {
+      const [fulltextResults] = await pool.query(
+        `SELECT * FROM \`cn-pw_dictionary\` 
+         WHERE MATCH(word, translation) AGAINST(? IN NATURAL LANGUAGE MODE)
+         ORDER BY CHAR_LENGTH(word) ASC 
+         LIMIT 5`,
+        [query]
+      );
+
+      if (fulltextResults.length > 0) {
+        return res.json({ suggestions: fulltextResults });
+      }
+    } catch (err) {
+      console.warn("⚠️ FULLTEXT 查询失败，回退到 LIKE + SOUNDEX");
+    }
+
+    // **3️⃣ LIKE + SOUNDEX 搜索**
     const [fuzzyResults] = await pool.query(
       `SELECT * FROM \`cn-pw_dictionary\` 
-       WHERE word LIKE ? OR translation LIKE ? 
+       WHERE word LIKE ? OR translation LIKE ? OR SOUNDEX(word) = SOUNDEX(?) 
        ORDER BY CHAR_LENGTH(word) ASC 
        LIMIT 5`,
-      [`%${query}%`, `%${query}%`]
+      [`%${query}%`, `%${query}%`, query]
     );
 
     if (fuzzyResults.length > 0) {
@@ -58,7 +75,7 @@ app.get("/search", async (req, res) => {
 
     console.log("❌ 没有找到相关结果，提供推荐词...");
     
-    // **3️⃣ 推荐相似的单词**
+    // **4️⃣ 推荐相似的单词**
     const [recommendedResults] = await pool.query(
       `SELECT word, translation FROM \`cn-pw_dictionary\` 
        WHERE word REGEXP ? OR translation REGEXP ? 
