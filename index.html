@@ -136,7 +136,7 @@
 </div>
 
 <script>
-const API_BASE = "https://belauyi.onrender.com"; // Your backend URL
+const API_BASE = "https://belauyi.onrender.com"; // 你的后端 API 地址
 
 document.getElementById("dictForm").addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -154,7 +154,7 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
         if (!response.ok) throw new Error("查询失败");
 
         const data = await response.json();
-        console.log("🔍 API 返回数据:", data); // 记录 API 返回的内容
+        console.log("🔍 API 返回数据:", data); // 确保 API 数据返回正确
 
         let output = "";
 
@@ -173,17 +173,15 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
             output += `</ul>`;
         }
 
-        // **2️⃣ 近似匹配**
+        // **2️⃣ 让用户选择相似匹配**
         if (Array.isArray(data.suggestions) && data.suggestions.length > 0) {
-            output += `<p><b>相似匹配：</b></p><ul>`;
-            output += data.suggestions.map(item => `
-                <li>
-                    <span onclick="document.getElementById('input-word').value='${item.word}'; document.querySelector('form').dispatchEvent(new Event('submit'));">
-                        ${item.word} (${item.translation || "暂无翻译"})
-                    </span>
-                </li>
-            `).join("");
-            output += "</ul>";
+            output += `<p><b>你可能想找这些词：</b></p>`;
+            output += `<select id="suggestionsSelect" onchange="handleSelection()">`;
+            output += `<option value="">请选择...</option>`;
+            data.suggestions.forEach(item => {
+                output += `<option value="${item.word}">${item.word} (${item.translation || "暂无翻译"})</option>`;
+            });
+            output += `</select>`;
         }
 
         if (!output) output = "<p>未找到翻译结果</p>";
@@ -193,7 +191,17 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
         resultDiv.innerHTML = `<p style='color: red;'>查询失败: ${error.message}</p>`;
     }
 });
+
+// **3️⃣ 处理下拉菜单选择**
+function handleSelection() {
+    const selectedWord = document.getElementById("suggestionsSelect").value;
+    if (selectedWord) {
+        document.getElementById("input-word").value = selectedWord;
+        document.querySelector('form').dispatchEvent(new Event('submit')); // 重新提交表单
+    }
+}
 </script>
+
 
 </body>
 </html>
