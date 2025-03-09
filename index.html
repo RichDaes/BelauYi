@@ -133,51 +133,54 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
 
   resultDiv.innerHTML = "<p style='color: gray;'>查询中...</p>"; // 显示加载状态
 
- try {
-  const response = await fetch(`${apiBaseUrl}/search?word=${encodeURIComponent(inputWord)}`);
-  
-  if (!response.ok) {
-    throw new Error("查询失败，服务器返回错误");
+  try {
+    const response = await fetch(`${apiBaseUrl}/search?word=${encodeURIComponent(inputWord)}`);
+    
+    if (!response.ok) {
+      throw new Error("查询失败，服务器返回错误");
+    }
+
+    const data = await response.json();
+    console.log("🔍 API 返回数据:", data); // 确保 API 真的返回数据
+    let output = "";
+
+    // ✅ 处理精准匹配数据
+    if (data.exactMatches && data.exactMatches.length > 0) {
+      output += "<p><b>精准匹配：</b></p>";
+      output += data.exactMatches.map(item => `
+        <div>
+          <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
+          <b>词性：</b> ${item.type || "无"}<br>
+          <b>释义：</b> ${item.definition || "暂无释义"}<br>
+          <b>示例：</b> ${item.example || "暂无示例"}
+        </div>
+      `).join("");
+    }
+
+    // ✅ **确保 `suggestions` 也被正确解析**
+    if (data.suggestions && data.suggestions.length > 0) {
+      output += "<p><b>相似匹配：</b></p>";
+      output += data.suggestions.map(item => `
+        <div>
+          <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
+          <b>词性：</b> ${item.type || "无"}<br>
+          <b>释义：</b> ${item.definition || "暂无释义"}<br>
+          <b>示例：</b> ${item.example || "暂无示例"}
+        </div>
+      `).join("");
+    }
+
+    // **如果 `exactMatches` 和 `suggestions` 都为空，才显示“未找到”**
+    if (!output) {
+      output = "<p>未找到翻译结果</p>";
+    }
+
+    resultDiv.innerHTML = output;
+  } catch (error) {
+    console.error("🚨 API 请求错误:", error);
+    resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
   }
-
-  const data = await response.json();
-  console.log("🔍 API 返回数据:", data); // 确保 API 真的返回数据
-  let output = "";
-
-  if (data.exactMatches && data.exactMatches.length > 0) {
-    output += "<p><b>精准匹配：</b></p>";
-    output += data.exactMatches.map(item => `
-      <div>
-        <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
-        <b>词性：</b> ${item.type || "无"}<br>
-        <b>释义：</b> ${item.definition || "暂无释义"}<br>
-        <b>示例：</b> ${item.example || "暂无示例"}
-      </div>
-    `).join("");
-  }
-
-  if (data.suggestions && data.suggestions.length > 0) {
-    output += "<p><b>相似匹配：</b></p>";
-    output += data.suggestions.map(item => `
-      <div>
-        <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
-        <b>词性：</b> ${item.type || "无"}<br>
-        <b>释义：</b> ${item.definition || "暂无释义"}<br>
-        <b>示例：</b> ${item.example || "暂无示例"}
-      </div>
-    `).join("");
-  }
-
-  if (!output) {
-    output = "<p>未找到翻译结果</p>";
-  }
-
-  resultDiv.innerHTML = output;
-} catch (error) {
-  console.error("🚨 API 请求错误:", error);
-  resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
-}
-
+});
 
 
 </script>
