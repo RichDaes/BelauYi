@@ -1,189 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
-  <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>中译帕词典</title>
-  <style type="text/css">
-    html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        background: url("https://images.pexels.com/photos/26926255/pexels-photo-26926255.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2") no-repeat center center fixed;
-        background-size: cover;
-    }
-
-    body {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        background-color: rgba(0, 0, 0, 0.5);
-        max-width: 100%;
-        overflow-x: hidden;
-    }
-
-    .top {
-        width: 100%;
-        padding: 30px;
-        background-color: rgba(255, 199, 44, 0.9);
-        text-align: center;
-        color: #4D3A00;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-    .main {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        margin: 20px 0;
-        color: white;
-    }
-
-    .search-box {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.8);
-        padding: 15px;
-        border-radius: 30px;
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .search-box input[type="search"] {
-        width: 300px;
-        padding: 10px;
-        border: none;
-        border-radius: 20px;
-        font-size: 16px;
-        outline: none;
-        margin-right: 10px;
-    }
-
-    .search-box button[type="submit"] {
-        padding: 10px 20px;
-        background-color: #FFC72C;
-        color: #4D3A00;
-        border: none;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: bold;
-    }
-
-    #result {
-        margin-top: 20px;
-        font-size: 18px;
-        color: #333;
-        text-align: left;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .footer {
-        background-color: rgba(0, 68, 102, 0.9);
-        color: white;
-        height: 60px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 16px;
-    }
+  <style>
+    body { background: rgba(0, 0, 0, 0.1); }
+    .main { background-color: rgba(255, 255, 255, 0.9); padding: 20px; }
   </style>
 </head>
 <body>
-<div class="top">
-    BELAUYI.COM - 中译帕词典
-</div>
-<div class="main">
-    <h2 style="color: #FFC72C; font-size: 24px;">智能匹配 | 快速翻译 | 拼写无忧！</h2>
+  <div class="top">BELAUYI.COM - 中译帕词典</div>
+  <div class="main">
+    <h2>智能匹配 | 快速翻译 | 拼写无忧！</h2>
     <div class="search-box">
       <form id="dictForm">
-        <input type="search" id="input-word" placeholder="输入中文或帕劳语 / Enter Chinese or Palauan">
-        <button type="submit" id="search-btn">翻译 / Translate</button>
-    </form>
+        <input type="search" id="input-word" placeholder="输入中文或帕劳语">
+        <button type="submit">翻译</button>
+      </form>
     </div>
     <div id="result"></div>
-</div>
-<div class="footer">
-    <a href="#" target="_blank">Disclaimer</a> | 联系电话: (680) 770 - 2868
-</div>
-
- # 前端 JavaScript 代码（查询 API 并显示翻译结果）
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+  </div>
 <script>
+const apiBaseUrl = window.location.origin;
 
-const apiBaseUrl = "https://belauyi.onrender.com"; // 替换成你的后端 API 地址
-
-document.getElementById("dictForm").addEventListener("submit", async function (event) {
+async function searchWord(event) {
   event.preventDefault();
-  
   const inputWord = document.getElementById("input-word").value.trim();
   const resultDiv = document.getElementById("result");
-
   if (!inputWord) {
     resultDiv.innerHTML = "<p style='color: red;'>请输入要翻译的词汇！</p>";
     return;
   }
-
-  resultDiv.innerHTML = "<p style='color: gray;'>查询中...</p>"; // 显示加载状态
-
+  resultDiv.innerHTML = "<p>查询中...</p>";
   try {
-    const response = await fetch(`${apiBaseUrl}/search?word=${encodeURIComponent(inputWord)}`);
-    
-    if (!response.ok) {
-      throw new Error("查询失败，服务器返回错误");
-    }
-
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(`${apiBaseUrl}/search?word=${encodeURIComponent(inputWord)}`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!response.ok) throw new Error("查询失败");
     const data = await response.json();
-    console.log("🔍 API 返回数据:", data); // 确保 API 真的返回数据
     let output = "";
-
-    // ✅ 处理精准匹配数据
-    if (data.exactMatches && data.exactMatches.length > 0) {
-      output += "<p><b>精准匹配：</b></p>";
-      output += data.exactMatches.map(item => `
-        <div>
-          <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
-          <b>词性：</b> ${item.type || "无"}<br>
-          <b>释义：</b> ${item.definition || "暂无释义"}<br>
-          <b>示例：</b> ${item.example || "暂无示例"}
-        </div>
-      `).join("");
+    if (data.exactMatches.length > 0) {
+      output += `<p><b>精准匹配：</b></p>`;
+      output += data.exactMatches.map(item => `<div><b>${item.word}</b>: ${item.translation || "暂无翻译"}</div>`).join("");
     }
-
-    // ✅ **确保 `suggestions` 也被正确解析**
-    if (data.suggestions && data.suggestions.length > 0) {
-      output += "<p><b>相似匹配：</b></p>";
-      output += data.suggestions.map(item => `
-        <div>
-          <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
-          <b>词性：</b> ${item.type || "无"}<br>
-          <b>释义：</b> ${item.definition || "暂无释义"}<br>
-          <b>示例：</b> ${item.example || "暂无示例"}
-        </div>
-      `).join("");
+    if (data.suggestions.length > 0) {
+      output += `<p><b>相似匹配：</b></p>`;
+      output += data.suggestions.map(item => `<div><b>${item.word}</b>: ${item.translation || "暂无翻译"}</div>`).join("");
     }
-
-    // **如果 `exactMatches` 和 `suggestions` 都为空，才显示“未找到”**
-    if (!output) {
-      output = "<p>未找到翻译结果</p>";
-    }
-
+    if (!output) output = "<p>未找到翻译结果</p>";
     resultDiv.innerHTML = output;
   } catch (error) {
-    console.error("🚨 API 请求错误:", error);
     resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
   }
-});
-
-
+}
+document.getElementById("dictForm").addEventListener("submit", searchWord);
 </script>
-
 </body>
 </html>
