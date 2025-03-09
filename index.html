@@ -154,17 +154,19 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
         if (!response.ok) throw new Error("查询失败");
 
         const data = await response.json();
+        console.log("🔍 API 返回数据:", data); // 记录 API 返回的内容
+
         let output = "";
 
-        // **1️⃣ Auto-Correction Suggestion**
+        // **1️⃣ 纠正建议**
         if (data.correctedWord) {
             output += `<div class="recommendation"><b>你是否想输入: 
                       <span onclick="document.getElementById('input-word').value='${data.correctedWord}'; document.querySelector('form').dispatchEvent(new Event('submit'));">
                       ${data.correctedWord}</span>？</b></div>`;
         }
 
-        // **2️⃣ Show Exact Matches**
-        if (data.exactMatches && data.exactMatches.length > 0) {
+        // **2️⃣ 精确匹配**
+        if (Array.isArray(data.exactMatches) && data.exactMatches.length > 0) {
             output += `<p><b>精准匹配：</b></p>`;
             output += data.exactMatches.map(item => `
                 <div>
@@ -176,8 +178,8 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
             `).join("");
         }
 
-        // **3️⃣ Show Similar Matches**
-        if (data.suggestions && data.suggestions.length > 0) {
+        // **3️⃣ 近似匹配**
+        if (Array.isArray(data.suggestions) && data.suggestions.length > 0) {
             output += `<div class="recommendation"><b>相似匹配：</b><ul>`;
             output += data.suggestions.map(item => `
                 <li>
@@ -187,4 +189,15 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
                 </li>
             `).join("");
             output += "</ul></div>";
-     
+        }
+
+        if (!output) output = "<p>未找到翻译结果</p>";
+        resultDiv.innerHTML = output;
+
+    } catch (error) {
+        resultDiv.innerHTML = `<p style='color: red;'>查询失败: ${error.message}</p>`;
+    }
+});
+</script>
+</body>
+</html>
