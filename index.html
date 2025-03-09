@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
-  <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>中译帕词典</title>
-  <style type="text/css">
+  <style>
     html, body {
         height: 100%;
         margin: 0;
@@ -81,6 +82,28 @@
         padding: 15px;
         border-radius: 10px;
         box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 600px;
+    }
+
+    .recommendation {
+        background-color: rgba(255, 199, 44, 0.2);
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 10px;
+        font-size: 16px;
+        color: #4D3A00;
+    }
+
+    .recommendation span {
+        cursor: pointer;
+        color: blue;
+        text-decoration: underline;
+        font-weight: bold;
+    }
+
+    .recommendation span:hover {
+        color: red;
     }
 
     .footer {
@@ -104,15 +127,16 @@
       <form id="dictForm">
         <input type="search" id="input-word" placeholder="输入中文或帕劳语 / Enter Chinese or Palauan">
         <button type="submit" id="search-btn">翻译 / Translate</button>
-    </form>
+      </form>
     </div>
     <div id="result"></div>
 </div>
 <div class="footer">
-      View our/访问我们的 <a class="disclaimer" href="Disclaimer.html">Disclaimers/免责申明</a> | 联系电话: (680) 770 - 2868
+    <a href="#" target="_blank">Disclaimer</a> | 联系电话: (680) 770 - 2868
 </div>
+
 <script>
-const API_BASE = "https://belauyi.onrender.com"; // Your backend URL
+  const API_BASE = "https://belauyi.onrender.com"; // Your backend URL
 
 document.getElementById("dictForm").addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -134,10 +158,9 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
 
         // **1️⃣ Auto-Correction Suggestion**
         if (data.correctedWord) {
-            output += `<p style='color: orange;'><b>你是否想输入: 
-                      <span style="cursor: pointer; color: blue; text-decoration: underline;"
-                      onclick="document.getElementById('input-word').value='${data.correctedWord}'; document.querySelector('form').dispatchEvent(new Event('submit'));">
-                      ${data.correctedWord}</span>？</b></p>`;
+            output += `<div class="recommendation"><b>你是否想输入: 
+                      <span onclick="document.getElementById('input-word').value='${data.correctedWord}'; document.querySelector('form').dispatchEvent(new Event('submit'));">
+                      ${data.correctedWord}</span>？</b></div>`;
         }
 
         // **2️⃣ Show Exact Matches**
@@ -155,31 +178,13 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
 
         // **3️⃣ Show Similar Matches**
         if (data.suggestions && data.suggestions.length > 0) {
-            output += `<p><b>相似匹配：</b></p><ul>`;
+            output += `<div class="recommendation"><b>相似匹配：</b><ul>`;
             output += data.suggestions.map(item => `
-                <li style="cursor: pointer; color: blue; text-decoration: underline;"
-                    onclick="document.getElementById('input-word').value='${item.word}'; document.querySelector('form').dispatchEvent(new Event('submit')); this.style.color='red'; setTimeout(()=>{this.style.color='blue';}, 500);">
-                    <b>${item.word}</b> (${item.translation || "暂无翻译"})
+                <li>
+                    <span onclick="document.getElementById('input-word').value='${item.word}'; document.querySelector('form').dispatchEvent(new Event('submit'));">
+                        ${item.word} (${item.translation || "暂无翻译"})
+                    </span>
                 </li>
             `).join("");
-            output += "</ul>";
-        }
-
-        if (!output) output = "<p>未找到翻译结果</p>";
-        resultDiv.innerHTML = output;
-
-    } catch (error) {
-        resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
-    }
-});
-
-// Allow "Enter" to trigger search
-document.getElementById("input-word").addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-        document.getElementById("search-btn").click();
-    }
-});
-</script>
-
-</body>
-</html>
+            output += "</ul></div>";
+     
