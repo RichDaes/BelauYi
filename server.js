@@ -58,7 +58,7 @@ app.get("/search", async (req, res) => {
     // **3️⃣ 返回所有匹配的结果，让前端选择**
     return res.json({
       exactMatches,
-      suggestions: bestMatches.length > 0 && minDistance <= 2 ? bestMatches : []
+      suggestions: bestMatches.length > 0 && minDistance <= 4 ? bestMatches : []
     });
   } catch (err) {
     console.error("❌ 数据库查询错误:", err.message);
