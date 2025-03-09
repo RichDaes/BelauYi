@@ -1,7 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
-require("dotenv").config();
+const levenshtein = require("fast-levenshtein"); // Add Levenshtein for typo detection
 
 const app = express();
 app.use(cors());
@@ -31,47 +31,56 @@ app.get("/search", async (req, res) => {
   console.log(`🔍 查询词汇: ${query}`);
 
   try {
+    const connection = await pool.getConnection();
+
     // **1️⃣ 精确匹配**
-    const [exactResults] = await pool.query(
+    const [exactResults] = await connection.query(
       "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary` WHERE word = ? OR translation = ?",
       [query, query]
     );
 
     if (exactResults.length > 0) {
+      connection.release();
       return res.json({ exactMatches: exactResults });
     }
 
     console.log("⚠️ 没有找到精确匹配，进行模糊搜索...");
 
     // **2️⃣ 高级模糊搜索**
-    const [fuzzyResults] = await pool.query(
-      `SELECT word, translation, type, definition, example FROM \`cn-pw_dictionary\` 
-       WHERE word LIKE ? OR translation LIKE ? 
-       ORDER BY CHAR_LENGTH(word) ASC 
-       LIMIT 1000`,
-      [`%${query}%`, `%${query}%`]
+    const [allWords] = await connection.query(
+      "SELECT word, translation FROM `cn-pw_dictionary`"
     );
 
-    if (fuzzyResults.length > 0) {
-      return res.json({ suggestions: fuzzyResults });
+    let bestMatches = [];
+    let minDistance = Infinity;
+
+    allWords.forEach((row) => {
+      const distance = levenshtein.get(query, row.word);
+      if (distance < minDistance) {
+        minDistance = distance;
+        bestMatches = [row];
+      } else if (distance === minDistance) {
+        bestMatches.push(row);
+      }
+    });
+
+    connection.release();
+
+    // If the closest match has a small distance, return it as a correction
+    if (minDistance <= 2 && bestMatches.length === 1) {
+      return res.json({
+        message: `你是否想输入: ${bestMatches[0].word}？`,
+        correctedWord: bestMatches[0].word,
+        exactMatches: [],
+        suggestions: bestMatches
+      });
     }
 
-    console.log("❌ 没有找到相关结果，提供推荐词...");
-    
-    // **3️⃣ 推荐相似的单词**
-    const [recommendedResults] = await pool.query(
-      `SELECT word, translation FROM \`cn-pw_dictionary\` 
-       WHERE word REGEXP ? OR translation REGEXP ? 
-       ORDER BY CHAR_LENGTH(word) ASC 
-       LIMIT 1000`,
-      [`${query[0]}`, `${query[0]}`] // 仅匹配第一个字符（可调整）
-    );
-
-    if (recommendedResults.length > 0) {
-      return res.json({ message: "未找到翻译结果", recommendations: recommendedResults });
-    }
-
-    return res.json({ message: "未找到翻译结果，也没有推荐词" });
+    // Otherwise, return the closest matches as suggestions
+    return res.json({
+      exactMatches: [],
+      suggestions: bestMatches
+    });
 
   } catch (err) {
     console.error("❌ 数据库查询错误:", err.message);
