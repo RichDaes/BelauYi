@@ -64,7 +64,7 @@ app.get("/search", async (req, res) => {
        WHERE word REGEXP ? OR translation REGEXP ? 
        ORDER BY CHAR_LENGTH(word) ASC 
        LIMIT 5`,
-      [`${query[0]}`, `${query[10]}`] // 仅匹配第一个字符（可调整）
+      [`${query[0]}`, `${query[1000]}`] // 仅匹配第一个字符（可调整）
     );
 
     if (recommendedResults.length > 0) {
