@@ -33,19 +33,19 @@ app.get("/search", async (req, res) => {
   try {
     // **1️⃣ 精确匹配**
     const [exactResults] = await pool.query(
-      "SELECT * FROM `cn-pw_dictionary` WHERE word = ? OR translation = ?",
+      "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary` WHERE word = ? OR translation = ?",
       [query, query]
     );
 
     if (exactResults.length > 0) {
-      return res.json(exactResults);
+      return res.json({ exactMatches: exactResults });
     }
 
     console.log("⚠️ 没有找到精确匹配，进行模糊搜索...");
 
     // **2️⃣ 高级模糊搜索**
     const [fuzzyResults] = await pool.query(
-      `SELECT * FROM \`cn-pw_dictionary\` 
+      `SELECT word, translation, type, definition, example FROM \`cn-pw_dictionary\` 
        WHERE word LIKE ? OR translation LIKE ? 
        ORDER BY CHAR_LENGTH(word) ASC 
        LIMIT 5`,
@@ -64,7 +64,7 @@ app.get("/search", async (req, res) => {
        WHERE word REGEXP ? OR translation REGEXP ? 
        ORDER BY CHAR_LENGTH(word) ASC 
        LIMIT 5`,
-      [`${query[0]}`, `${query[0]}`] // 仅匹配第一个字符（可调整）
+      [`${query[0]}`, `${query[10]}`] // 仅匹配第一个字符（可调整）
     );
 
     if (recommendedResults.length > 0) {
