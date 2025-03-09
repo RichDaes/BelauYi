@@ -114,6 +114,20 @@
         justify-content: center;
         align-items: center;
         font-size: 16px;
+      
+      .suggestion-item {
+    padding: 10px;
+    margin: 5px 0;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    border-radius: 5px;
+}
+
+.suggestion-item:hover {
+    background-color: #f5f5dc; /* Hover 变浅黄色 */
+    font-weight: bold;
+    padding-left: 15px; /* 增强 hover 效果 */
+}
     }
   </style>
 </head>
@@ -179,20 +193,49 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
             output += `<select id="suggestionsSelect" onchange="handleSelection()">`;
             output += `<option value="">请选择...</option>`;
             data.suggestions.forEach(item => {
-                output += `<option value="${item.word}">${item.word} (${item.translation || "暂无翻译"})</option>`;
+                output += `<option value="${item.word}" data-translation="${item.translation || '暂无翻译'}">${item.word} (${item.translation || "暂无翻译"})</option>`;
             });
             output += `</select>`;
+
+            // **3️⃣ 显示 `hover` 反馈**
+            output += `
+                <ul id="suggestionsList">
+                    ${data.suggestions.map(item => `
+                        <li class="suggestion-item" data-word="${item.word}" data-translation="${item.translation || '暂无翻译'}">
+                            ${item.word}
+                        </li>
+                    `).join("")}
+                </ul>
+            `;
         }
 
         if (!output) output = "<p>未找到翻译结果</p>";
         resultDiv.innerHTML = output;
+
+        // **4️⃣ 监听鼠标 `hover` 事件**
+        document.querySelectorAll(".suggestion-item").forEach(item => {
+            item.addEventListener("mouseover", function() {
+                this.style.backgroundColor = "#f5f5dc"; // 浅黄色 hover
+                this.style.color = "#333"; // 文字颜色
+                this.innerHTML = `${this.dataset.word} → ${this.dataset.translation}`;
+            });
+            item.addEventListener("mouseout", function() {
+                this.style.backgroundColor = "transparent"; // 恢复背景
+                this.style.color = "black";
+                this.innerHTML = this.dataset.word;
+            });
+            item.addEventListener("click", function() {
+                document.getElementById("input-word").value = this.dataset.word;
+                document.querySelector('form').dispatchEvent(new Event('submit')); // 重新提交表单
+            });
+        });
 
     } catch (error) {
         resultDiv.innerHTML = `<p style='color: red;'>查询失败: ${error.message}</p>`;
     }
 });
 
-// **3️⃣ 处理下拉菜单选择**
+// **5️⃣ 处理下拉菜单选择**
 function handleSelection() {
     const selectedWord = document.getElementById("suggestionsSelect").value;
     if (selectedWord) {
