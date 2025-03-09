@@ -63,8 +63,8 @@ app.get("/search", async (req, res) => {
       `SELECT word, translation FROM \`cn-pw_dictionary\` 
        WHERE word REGEXP ? OR translation REGEXP ? 
        ORDER BY CHAR_LENGTH(word) ASC 
-       LIMIT 5`,
-      [`${query[0]}`, `${query[1000]}`] // 仅匹配第一个字符（可调整）
+       LIMIT 1000`,
+      [`${query[0]}`, `${query[0]}`] // 仅匹配第一个字符（可调整）
     );
 
     if (recommendedResults.length > 0) {
