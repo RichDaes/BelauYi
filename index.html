@@ -17,6 +17,7 @@
     body {
         display: flex;
         flex-direction: column;
+        align-items: center;
         justify-content: space-between;
         background-color: rgba(0, 0, 0, 0.5);
         max-width: 100%;
@@ -33,15 +34,6 @@
         font-weight: bold;
     }
 
-    .main {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        margin: 20px 0;
-        color: white;
-    }
-
     .search-box {
         display: flex;
         justify-content: center;
@@ -52,7 +44,7 @@
         box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     }
 
-    .search-box input[type="search"] {
+    .search-box input {
         width: 300px;
         padding: 10px;
         border: none;
@@ -62,7 +54,7 @@
         margin-right: 10px;
     }
 
-    .search-box button[type="submit"] {
+    .search-box button {
         padding: 10px 20px;
         background-color: #FFC72C;
         color: #4D3A00;
@@ -86,24 +78,30 @@
         max-width: 600px;
     }
 
-    .recommendation {
-        background-color: rgba(255, 199, 44, 0.2);
-        padding: 10px;
-        border-radius: 8px;
+    /* **优化下拉菜单样式** */
+    .suggestions-container {
         margin-top: 10px;
+        width: 100%;
+        text-align: center;
+    }
+
+    select {
+        width: 90%;
+        max-width: 320px;
+        padding: 10px;
         font-size: 16px;
-        color: #4D3A00;
-    }
-
-    .recommendation span {
+        border-radius: 8px;
+        border: 2px solid #f39c12;
+        background-color: white;
+        color: #333;
         cursor: pointer;
-        color: blue;
-        text-decoration: underline;
-        font-weight: bold;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease-in-out;
     }
 
-    .recommendation span:hover {
-        color: red;
+    select:hover {
+        border-color: #e67e22;
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .footer {
@@ -114,53 +112,6 @@
         justify-content: center;
         align-items: center;
         font-size: 16px;
-      
-      .suggestion-item {
-    padding: 10px;
-    margin: 5px 0;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    border-radius: 5px;
-}
-
-.suggestion-item:hover {
-    background-color: #f5f5dc; /* Hover 变浅黄色 */
-    font-weight: bold;
-    padding-left: 15px; /* 增强 hover 效果 */
-}
-      select {
-    width: 100%;
-    max-width: 300px;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: 2px solid #f39c12;
-    background-color: white;
-    color: #333;
-    cursor: pointer;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease-in-out;
-}
-
-/* 悬停时的样式 */
-select:hover {
-    border-color: #e67e22;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* 下拉菜单选项的样式 */
-select option {
-    padding: 10px;
-    font-size: 16px;
-    background: white;
-    color: black;
-}
-
-/* 鼠标悬停时的选项样式 */
-select option:hover {
-    background-color: #ffeaa7;
-    color: #222;
-}
     }
   </style>
 </head>
@@ -173,10 +124,15 @@ select option:hover {
     <div class="search-box">
       <form id="dictForm">
         <input type="search" id="input-word" placeholder="输入中文或帕劳语 / Enter Chinese or Palauan">
-        <button type="submit" id="search-btn">翻译 / Translate</button>
+        <button type="submit">翻译 / Translate</button>
       </form>
     </div>
     <div id="result"></div>
+    <div class="suggestions-container">
+        <select id="suggestionsSelect" onchange="handleSelection()">
+            <option value="">请选择...</option>
+        </select>
+    </div>
 </div>
 <div class="footer">
     <a href="#" target="_blank">Disclaimer</a> | 联系电话: (680) 770 - 2868
@@ -206,35 +162,23 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
 
         let output = "";
 
-        // **1️⃣ 精确匹配**
-        if (Array.isArray(data.exactMatches) && data.exactMatches.length > 0) {
+        if (data.exactMatches.length > 0) {
             output += `<p><b>精准匹配：</b></p><ul>`;
             data.exactMatches.forEach(item => {
-                output += `
-                    <li class="result-item">
-                        <b>${item.word}</b> → ${item.translation || "暂无翻译"}
-                        <br><small><b>词性：</b> ${item.type || "无"} | <b>释义：</b> ${item.definition || "暂无释义"}</small>
-                        ${item.example ? `<br><small><b>示例：</b>${item.example}</small>` : ""}
-                    </li><hr>
-                `;
+                output += `<li>${item.word} → ${item.translation || "暂无翻译"}</li>`;
             });
             output += `</ul>`;
         }
 
-        // **2️⃣ 让用户选择相似匹配**
-        if (Array.isArray(data.suggestions) && data.suggestions.length > 0) {
-            output += `<p><b>你可能想找这些词：</b></p>`;
-            output += `<select id="suggestionsSelect" onchange="handleSelection()">`;
-            output += `<option value="">请选择...</option>`;
+        // **填充下拉菜单**
+        suggestionsSelect.innerHTML = `<option value="">请选择...</option>`;
+        if (data.suggestions.length > 0) {
             data.suggestions.forEach(item => {
-                output += `<option value="${item.word}">${item.word} (${item.translation || "暂无翻译"})</option>`;
+                let option = document.createElement("option");
+                option.value = item.word;
+                option.textContent = `${item.word} (${item.translation || "暂无翻译"})`;
+                suggestionsSelect.appendChild(option);
             });
-            output += `</select>`;
-
-            // **填充 `<select>` 选项**
-            populateSuggestions(data.suggestions);
-        } else {
-            suggestionsSelect.innerHTML = ""; // 如果没有相似词，清空 `<select>`
         }
 
         if (!output) output = "<p>未找到翻译结果</p>";
@@ -245,30 +189,14 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
     }
 });
 
-// **3️⃣ 处理下拉菜单选择**
+// **处理选择**
 function handleSelection() {
     const selectedWord = document.getElementById("suggestionsSelect").value;
     if (selectedWord) {
         document.getElementById("input-word").value = selectedWord;
-        document.querySelector('form').dispatchEvent(new Event('submit')); // 重新提交表单
+        document.querySelector('form').dispatchEvent(new Event('submit'));
     }
 }
-
-// **4️⃣ 填充 `<select>` 选项**
-function populateSuggestions(suggestions) {
-    const select = document.getElementById("suggestionsSelect");
-    select.innerHTML = `<option value="">请选择...</option>`; // 默认选项
-
-    suggestions.forEach(item => {
-        let option = document.createElement("option");
-        option.value = item.word;
-        option.textContent = `${item.word} (${item.translation || "暂无翻译"})`;
-        select.appendChild(option);
-    });
-}
-
 </script>
-
-
 </body>
 </html>
