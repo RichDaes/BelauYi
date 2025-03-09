@@ -118,8 +118,77 @@
     <a href="#" target="_blank">Disclaimer</a> | 联系电话: (680) 770 - 2868
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+<script>
+  document.getElementById("dictForm").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const inputWord = document.getElementById("input-word").value.trim();
+    const resultDiv = document.getElementById("result");
 
+    if (!inputWord) {
+      resultDiv.innerHTML = "<p style='color: red;'>请输入要翻译的词汇！</p>";
+      return;
+    }
+    if (inputWord.length > 30 || !/^[\u4e00-\u9fa5a-zA-Z]+$/.test(inputWord)) {
+      resultDiv.innerHTML = "<p style='color: red;'>请输入有效的单词（最长30字）！</p>";
+      return;
+    }
+
+    resultDiv.innerHTML = "<p>查询中...</p>";
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(`/search?word=${encodeURIComponent(inputWord)}`, { signal: controller.signal })
+        .catch(error => {
+          if (error.name === "AbortError") {
+            resultDiv.innerHTML = "<p style='color: red;'>查询超时，请稍后重试</p>";
+          }
+          throw error;
+        });
+
+      clearTimeout(timeout);
+      if (!response.ok) throw new Error("查询失败");
+
+      const data = await response.json();
+      let output = "";
+
+      if (data.exactMatches.length > 0) {
+        output += `<p><b>精准匹配：</b></p>`;
+        output += data.exactMatches.map(item => `
+          <div>
+            <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
+            <b>词性：</b> ${item.type || "无"}<br>
+            <b>释义：</b> ${item.definition || "暂无释义"}<br>
+            <b>示例：</b> ${item.example || "暂无示例"}
+          </div>
+        `).join("");
+      }
+
+      if (data.suggestions.length > 0) {
+        output += `<p><b>相似匹配：</b></p><ul>`;
+        output += data.suggestions.map(item => `
+          <li style="cursor: pointer; color: blue; text-decoration: underline;" 
+              onclick="document.getElementById('input-word').value='${item.word}'; document.querySelector('form').dispatchEvent(new Event('submit')); this.style.color='red'; setTimeout(()=>{this.style.color='blue';}, 500);">
+              <b>${item.word}</b> (${item.translation || "暂无翻译"})
+          </li>
+        `).join("");
+        output += "</ul>";
+      }
+
+      if (!output) output = "<p>未找到翻译结果</p>";
+      resultDiv.innerHTML = output;
+
+    } catch (error) {
+      resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
+    }
+  });
+
+  document.getElementById("input-word").addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      document.getElementById("search-btn").click();
+    }
+  });
+</script>
 
 </body>
 </html>
