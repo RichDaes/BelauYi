@@ -32,15 +32,18 @@ app.get("/search", async (req, res) => {
 
   console.log(`🔍 查询词汇: ${query}`);
 
+  let connection;
   try {
+    connection = await pool.getConnection();
+
     // **1️⃣ 查找数据库中是否有完全匹配的单词**
-    const [exactMatches] = await pool.query(
+    const [exactMatches] = await connection.query(
       "SELECT word, translation FROM `cn-pw_dictionary` WHERE word = ?",
       [query]
     );
 
     // **2️⃣ 获取所有单词进行近似匹配**
-    const [allWords] = await pool.query("SELECT word, translation FROM `cn-pw_dictionary`");
+    const [allWords] = await connection.query("SELECT word, translation FROM `cn-pw_dictionary`");
 
     let bestMatches = [];
     let minDistance = Infinity;
@@ -56,13 +59,15 @@ app.get("/search", async (req, res) => {
     });
 
     // **3️⃣ 返回所有匹配的结果，让前端选择**
-    return res.json({
+    res.json({
       exactMatches,
-      suggestions: bestMatches.length > 0 && minDistance <= 4 ? bestMatches : []
+      suggestions: bestMatches.length > 0 && minDistance <= 3 ? bestMatches : []
     });
   } catch (err) {
     console.error("❌ 数据库查询错误:", err.message);
-    return res.status(500).json({ message: "数据库查询失败" });
+    res.status(500).json({ message: "数据库查询失败" });
+  } finally {
+    if (connection) connection.release(); // 释放连接，防止连接池被占满
   }
 });
 
