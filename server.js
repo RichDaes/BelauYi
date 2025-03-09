@@ -44,7 +44,7 @@ app.get("/search", async (req, res) => {
 
     // **2️⃣ 近似匹配**
     const [fuzzyResults] = await connection.query(
-      "SELECT word, translation FROM `cn-pw_dictionary` WHERE word LIKE ? OR translation LIKE ? LIMIT 5",
+      "SELECT word, translation FROM `cn-pw_dictionary` WHERE word LIKE ? OR translation LIKE ? LIMIT 1000",
       [`%${query}%`, `%${query}%`]
     );
 
