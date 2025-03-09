@@ -111,6 +111,10 @@
 <div class="footer">
     <a href="#" target="_blank">Disclaimer</a> | 联系电话: (680) 770 - 2868
 </div>
+
+ # 前端 JavaScript 代码（查询 API 并显示翻译结果）
+
+```html
 <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
 <script>
 
@@ -131,51 +135,55 @@ document.getElementById("dictForm").addEventListener("submit", async function (e
 
   try {
     const response = await fetch(`${apiBaseUrl}/search?word=${encodeURIComponent(inputWord)}`);
+    
     if (!response.ok) {
       throw new Error("查询失败，服务器返回错误");
     }
 
     const data = await response.json();
-    console.log("🔍 API 返回数据:", data);
+    console.log("🔍 API 返回数据:", data); // 确保 API 真的返回数据
     let output = "";
 
+    // ✅ 处理精准匹配数据
     if (data.exactMatches && data.exactMatches.length > 0) {
       output += "<p><b>精准匹配：</b></p>";
       output += data.exactMatches.map(item => `
-        <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-          <span style="color: rgb(19, 0, 102); font-size: 20px;"><b>${item.word}</b></span><br>
-          <b>中文释义：</b> ${item.translation || "暂无翻译"}<br>
-          <b>词性：</b> ${item.type || "无"}<br>  
+        <div>
+          <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
+          <b>词性：</b> ${item.type || "无"}<br>
           <b>释义：</b> ${item.definition || "暂无释义"}<br>
           <b>示例：</b> ${item.example || "暂无示例"}
         </div>
       `).join("");
     }
 
+    // ✅ **确保 `suggestions` 也被正确解析**
     if (data.suggestions && data.suggestions.length > 0) {
       output += "<p><b>相似匹配：</b></p>";
       output += data.suggestions.map(item => `
-        <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-          <span style="color: rgb(19, 0, 102); font-size: 20px;"><b>${item.word}</b></span><br>
-          <b>中文释义：</b> ${item.translation || "暂无翻译"}<br>
-          <b>词性：</b> ${item.type || "无"}<br>  
+        <div>
+          <b>${item.word}</b>: ${item.translation || "暂无翻译"}<br>
+          <b>词性：</b> ${item.type || "无"}<br>
           <b>释义：</b> ${item.definition || "暂无释义"}<br>
           <b>示例：</b> ${item.example || "暂无示例"}
         </div>
       `).join("");
     }
 
+    // **如果 `exactMatches` 和 `suggestions` 都为空，才显示“未找到”**
     if (!output) {
       output = "<p>未找到翻译结果</p>";
     }
 
     resultDiv.innerHTML = output;
   } catch (error) {
-    console.error("查询错误:", error);
+    console.error("🚨 API 请求错误:", error);
     resultDiv.innerHTML = "<p style='color: red;'>查询失败，请稍后再试</p>";
   }
 });
 
+
 </script>
+
 </body>
 </html>
