@@ -42,6 +42,8 @@ app.get("/search", async (req, res) => {
       [query]
     );
 
+    console.log("🔍 数据库查询结果（精准匹配）:", exactMatches);
+
     // **2️⃣ 获取所有单词进行近似匹配**
     const [allWords] = await connection.query("SELECT word, translation, type, definition, example FROM `cn-pw_dictionary`");
 
@@ -58,9 +60,11 @@ app.get("/search", async (req, res) => {
       }
     });
 
+    console.log("🔍 数据库查询结果（近似匹配）:", bestMatches);
+
     // **3️⃣ 返回所有匹配的结果，让前端选择**
     res.json({
-      exactMatches,
+      exactMatches: exactMatches.length > 0 ? exactMatches : [],
       suggestions: bestMatches.length > 0 && minDistance <= 3 ? bestMatches : []
     });
   } catch (err) {
