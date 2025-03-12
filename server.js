@@ -18,9 +18,16 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// 简单函数：检测是否包含中文字符
+// 检测是否包含中文字符
 function isChinese(text) {
   return /[\u4E00-\u9FFF]/.test(text);
+}
+
+// 动态设置 Levenshtein 阈值：短词更严格，长词可稍宽松
+function getLevenshteinThreshold(len) {
+  if (len <= 2) return 1; 
+  if (len <= 5) return 2;
+  return 3;
 }
 
 app.get("/", (req, res) => {
@@ -39,25 +46,22 @@ app.get("/search", async (req, res) => {
   try {
     connection = await pool.getConnection();
 
-    // 根据输入判断要搜索哪个字段：中文搜 translation，其他搜 word
+    // 如果含中文字符 => 搜索 translation 列；否则 => 搜索 word 列
     const isCn = isChinese(query);
-    // 注意: searchColumn 只能是 "translation" 或 "word"
-    // 如果你想更严格，可以写个 if else，而不是直接这样子
     const searchColumn = isCn ? "translation" : "word";
 
     // **1️⃣ 精确匹配** (只搜对应列)
-    // 关键：使用反引号包裹表名和列名
     const [exactResults] = await connection.query(
       `SELECT word, translation, type, definition, example
-       FROM \`cn-pw_dictionary\`
-       WHERE \`${searchColumn}\` = ?`,
+         FROM \`cn-pw_dictionary\`
+        WHERE \`${searchColumn}\` = ?`,  // 用反引号避免 - 表名出错
       [query]
     );
 
     console.log("🔍 精确匹配结果:", exactResults);
 
-    // 如果有精准匹配，先返回
     if (exactResults.length > 0) {
+      // 如果有精准匹配，就返回
       connection.release();
       return res.json({
         exactMatches: exactResults,
@@ -65,21 +69,27 @@ app.get("/search", async (req, res) => {
       });
     }
 
-    // **2️⃣ Levenshtein 近似匹配**（只对相应的列做距离计算）
-    //   - 读取全部行后，基于 word 或 translation 做 Levenshtein
+    // **2️⃣ Levenshtein 近似匹配** 
+    //   读取整表，然后只对相关列做距离计算
     const [allRows] = await connection.query(
       "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary`"
     );
 
     connection.release();
 
+    // 动态阈值：根据输入长度来
+    const threshold = getLevenshteinThreshold(query.length);
     let bestMatches = [];
     let minDistance = Infinity;
 
     allRows.forEach((row) => {
-      // 如果是中文，就对 row.translation 做距离；否则对 row.word 做距离
       const targetText = isCn ? row.translation : row.word;
-      if (!targetText) return; // 如果目标字段为空，则跳过
+      if (!targetText) return;  // 字段为空就跳过
+
+      // 可选：先做长度过滤，若长度差大于 threshold，就不算距离
+      if (Math.abs(targetText.length - query.length) > threshold) {
+        return;
+      }
 
       const distance = levenshtein.get(query, targetText);
       if (distance < minDistance) {
@@ -90,13 +100,16 @@ app.get("/search", async (req, res) => {
       }
     });
 
-    console.log(`🔍 Levenshtein 最近距离: ${minDistance}, 单词数量: ${bestMatches.length}`);
+    console.log(`🔍 Levenshtein 最近距离: ${minDistance}, 词条数: ${bestMatches.length}`);
 
-    // 设定阈值：距离 ≤ 3 视为有效
-    if (minDistance <= 3) {
+    if (minDistance <= threshold) {
+      // 只返回前 5 个
+      // 如果想多点可以改成 10 或直接不限制
+      const limitedMatches = bestMatches.slice(0, 5);
+
       return res.json({
         exactMatches: [],
-        suggestions: bestMatches
+        suggestions: limitedMatches
       });
     } else {
       return res.json({
