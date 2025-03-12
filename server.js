@@ -41,13 +41,16 @@ app.get("/search", async (req, res) => {
 
     // 根据输入判断要搜索哪个字段：中文搜 translation，其他搜 word
     const isCn = isChinese(query);
+    // 注意: searchColumn 只能是 "translation" 或 "word"
+    // 如果你想更严格，可以写个 if else，而不是直接这样子
     const searchColumn = isCn ? "translation" : "word";
 
     // **1️⃣ 精确匹配** (只搜对应列)
+    // 关键：使用反引号包裹表名和列名
     const [exactResults] = await connection.query(
-      `SELECT word, translation, type, definition, example 
-       FROM cn-pw_dictionary
-       WHERE ${searchColumn} = ?`,
+      `SELECT word, translation, type, definition, example
+       FROM \`cn-pw_dictionary\`
+       WHERE \`${searchColumn}\` = ?`,
       [query]
     );
 
@@ -65,7 +68,7 @@ app.get("/search", async (req, res) => {
     // **2️⃣ Levenshtein 近似匹配**（只对相应的列做距离计算）
     //   - 读取全部行后，基于 word 或 translation 做 Levenshtein
     const [allRows] = await connection.query(
-      "SELECT word, translation, type, definition, example FROM cn-pw_dictionary"
+      "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary`"
     );
 
     connection.release();
@@ -74,9 +77,9 @@ app.get("/search", async (req, res) => {
     let minDistance = Infinity;
 
     allRows.forEach((row) => {
-      // 如果是中文，就对 row.translation 做距离；如果是英文/帕劳语，就对 row.word 做距离
+      // 如果是中文，就对 row.translation 做距离；否则对 row.word 做距离
       const targetText = isCn ? row.translation : row.word;
-      if (!targetText) return; // 如果目标字段为空，跳过
+      if (!targetText) return; // 如果目标字段为空，则跳过
 
       const distance = levenshtein.get(query, targetText);
       if (distance < minDistance) {
@@ -89,7 +92,7 @@ app.get("/search", async (req, res) => {
 
     console.log(`🔍 Levenshtein 最近距离: ${minDistance}, 单词数量: ${bestMatches.length}`);
 
-    // 设定阈值：距离小于等于 3 视为有效
+    // 设定阈值：距离 ≤ 3 视为有效
     if (minDistance <= 3) {
       return res.json({
         exactMatches: [],
