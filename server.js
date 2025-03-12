@@ -32,9 +32,10 @@ app.get("/search", async (req, res) => {
 
   let connection;
   try {
+    // 连接数据库
     connection = await pool.getConnection();
 
-    // **1️⃣ 精确匹配**
+    // 1️⃣ 精确匹配
     const [exactResults] = await connection.query(
       "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary` WHERE word = ? OR translation = ?",
       [query, query]
@@ -42,8 +43,7 @@ app.get("/search", async (req, res) => {
 
     console.log("🔍 精确匹配结果:", exactResults);
 
-    // 如果有精准匹配，先返回
-    // （如果你想让同时显示近似匹配，可以不在这里直接 return）
+    // 如果有精准匹配，则优先返回
     if (exactResults.length > 0) {
       connection.release();
       return res.json({
@@ -52,7 +52,7 @@ app.get("/search", async (req, res) => {
       });
     }
 
-    // **2️⃣ Levenshtein 计算所有单词**
+    // 2️⃣ Levenshtein 计算：遍历整张表
     const [allWords] = await connection.query(
       "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary`"
     );
@@ -62,7 +62,6 @@ app.get("/search", async (req, res) => {
 
     allWords.forEach((row) => {
       const distance = levenshtein.get(query, row.word);
-      // 记录离 query 最近的单词
       if (distance < minDistance) {
         minDistance = distance;
         bestMatches = [row];
@@ -73,16 +72,15 @@ app.get("/search", async (req, res) => {
 
     connection.release();
 
-    console.log(`🔍 Levenshtein 最近距离: ${minDistance}, 单词数: ${bestMatches.length}`);
+    console.log(`🔍 Levenshtein 最近距离: ${minDistance}, 匹配单词数: ${bestMatches.length}`);
 
-    // 设置一个合理的阈值，比如距离 ≤ 3 视为有效近似匹配
+    // 3️⃣ 距离阈值：<= 3 为有效近似
     if (minDistance <= 3) {
       return res.json({
         exactMatches: [],
         suggestions: bestMatches
       });
     } else {
-      // 没有在阈值内的单词
       return res.json({
         exactMatches: [],
         suggestions: []
