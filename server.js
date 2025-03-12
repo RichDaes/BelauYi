@@ -18,6 +18,11 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// 简单函数：检测是否包含中文字符
+function isChinese(text) {
+  return /[\u4E00-\u9FFF]/.test(text);
+}
+
 app.get("/", (req, res) => {
   res.send("🚀 API is running and connected to MySQL!");
 });
@@ -32,18 +37,23 @@ app.get("/search", async (req, res) => {
 
   let connection;
   try {
-    // 连接数据库
     connection = await pool.getConnection();
 
-    // 1️⃣ 精确匹配
+    // 根据输入判断要搜索哪个字段：中文搜 translation，其他搜 word
+    const isCn = isChinese(query);
+    const searchColumn = isCn ? "translation" : "word";
+
+    // **1️⃣ 精确匹配** (只搜对应列)
     const [exactResults] = await connection.query(
-      "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary` WHERE word = ? OR translation = ?",
-      [query, query]
+      `SELECT word, translation, type, definition, example 
+       FROM cn-pw_dictionary
+       WHERE ${searchColumn} = ?`,
+      [query]
     );
 
     console.log("🔍 精确匹配结果:", exactResults);
 
-    // 如果有精准匹配，则优先返回
+    // 如果有精准匹配，先返回
     if (exactResults.length > 0) {
       connection.release();
       return res.json({
@@ -52,16 +62,23 @@ app.get("/search", async (req, res) => {
       });
     }
 
-    // 2️⃣ Levenshtein 计算：遍历整张表
-    const [allWords] = await connection.query(
-      "SELECT word, translation, type, definition, example FROM `cn-pw_dictionary`"
+    // **2️⃣ Levenshtein 近似匹配**（只对相应的列做距离计算）
+    //   - 读取全部行后，基于 word 或 translation 做 Levenshtein
+    const [allRows] = await connection.query(
+      "SELECT word, translation, type, definition, example FROM cn-pw_dictionary"
     );
+
+    connection.release();
 
     let bestMatches = [];
     let minDistance = Infinity;
 
-    allWords.forEach((row) => {
-      const distance = levenshtein.get(query, row.word);
+    allRows.forEach((row) => {
+      // 如果是中文，就对 row.translation 做距离；如果是英文/帕劳语，就对 row.word 做距离
+      const targetText = isCn ? row.translation : row.word;
+      if (!targetText) return; // 如果目标字段为空，跳过
+
+      const distance = levenshtein.get(query, targetText);
       if (distance < minDistance) {
         minDistance = distance;
         bestMatches = [row];
@@ -70,11 +87,9 @@ app.get("/search", async (req, res) => {
       }
     });
 
-    connection.release();
+    console.log(`🔍 Levenshtein 最近距离: ${minDistance}, 单词数量: ${bestMatches.length}`);
 
-    console.log(`🔍 Levenshtein 最近距离: ${minDistance}, 匹配单词数: ${bestMatches.length}`);
-
-    // 3️⃣ 距离阈值：<= 3 为有效近似
+    // 设定阈值：距离小于等于 3 视为有效
     if (minDistance <= 3) {
       return res.json({
         exactMatches: [],
